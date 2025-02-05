@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Gallery</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: "Doto", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-family: "Doto", sans-serif;
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .gallery img {
+            width: 300px;
+            height: 200px;
+            object-fit: cover; /* 画像の比率を保ったままトリミング */
+            margin: 10px;
+            border-radius: 0; /* 角を四角にする */
+            transition: transform 0.3s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.1);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-family: "Doto", sans-serif;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photography Gallery</h1>
+    <div class="gallery">
+        <img src="syashin/000021.jpg" alt="Photo 1">
+        <img src="syashin/000025.jpg" alt="Photo 2">
+        <img src="syashin/000037.jpg" alt="Photo 3">
+        <img src="syashin/IMG_0919.JPG" alt="Photo 4">
+        <img src="syashin/IMG_1113.jpg" alt="Photo 5">
+        <img src="syashin/IMG_2567.JPG" alt="Photo 6">
+        <img src="syashin/IMG_4212.JPG" alt="Photo 7">
+        <img src="syashin/IMG_4221.JPG" alt="Photo 8">
+        <img src="syashin/IMG_4265.JPG" alt="Photo 9">
+        <img src="syashin/IMG_4498.JPG" alt="Photo 10">
+        <img src="syashin/IMG_4547.JPG" alt="Photo 11">
+        <img src="syashin/IMG_4690.JPG" alt="Photo 12">
+        <img src="syashin/IMG_5213.jpg" alt="Photo 13">
+        <img src="syashin/IMG_5481.JPG" alt="Photo 14">
+        <img src="syashin/IMG_5511.JPG" alt="Photo 15">
+        <img src="syashin/IMG_5825.JPG" alt="Photo 16">
+        <img src="syashin/IMG_5906.JPG" alt="Photo 17">
+        <img src="syashin/IMG_5917.JPG" alt="Photo 18">
+        <img src="syashin/IMG_7991_Original.jpg" alt="Photo 19">
+        <img src="syashin/IMG_8102_Original.jpg" alt="Photo 20">
+        <img src="syashin/IMG_9630.jpeg" alt="Photo 21">
+        <img src="syashin/IMG_9746 2.JPG" alt="Photo 22">
+        <img src="syashin/P1010149.JPG" alt="Photo 23">
+        <img src="syashin/P1010155.JPG" alt="Photo 24">
+    </div>
+
+    <a href="portfoliohonntai.html" class="back-button">Back to Home</a>
+</body>
+</html>
+

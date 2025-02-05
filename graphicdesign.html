@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphic Design</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: "Doto", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-family: "Doto", sans-serif;
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .gallery video {
+            width: 300px;
+            height: 200px;
+            object-fit: cover; /* 動画の比率を保ったままトリミング */
+            margin: 10px;
+            border-radius: 0; /* 角を四角にする */
+            transition: transform 0.3s;
+        }
+
+        .gallery video:hover {
+            transform: scale(1.1);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-family: "Doto", sans-serif;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graphic Design</h1>
+    <div class="gallery">
+        <video controls>
+            <source src="design/0001-0280.mp4" type="video/mp4">
+        </video>
+        <video controls>
+            <source src="design/koregaseikaida.0001-0250.mp4" type="video/mp4">
+        </video>
+        
+    </div>
+
+    <a href="portfoliohonntai.html" class="back-button">Back to Home</a>
+</body>
+</html>
