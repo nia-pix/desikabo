@@ -723,7 +723,7 @@
   const ASSET_KINDS = { '定期預金':'lock', '普通預金':'bank', '積立':'sprout', '投資':'chart', '現金':'wallet', 'へそくり':'box', 'その他':'gem' };
   const svgIc = n => `<svg class="ic"><use href="#i-${n}"/></svg>`;
   const DEFAULT = () => ({
-    v: 2,
+    v: 3,
     tx: [],
     goals: [],
     assets: [],
@@ -756,6 +756,17 @@
       const inAssets = (d.assets || []).reduce((a, x) => a + (x.amount || 0), 0);
       if (inGoals > inAssets) (d.assets = d.assets || []).push({ id: uid(), name: '貯金', kind: '普通預金', amount: inGoals - inAssets, updated: todayStr() });
       d.v = 2;
+    }
+    if (d.v < 3) {
+      // 既存の振り分けは、動かさないお金→口座の順に割り当てる
+      const srcs = [...(d.assets || []).map(x => ({ key: 'a:' + x.id, left: x.amount || 0 })), ...(d.accounts || []).map(x => ({ key: 'c:' + x.id, left: x.amount || 0 }))];
+      (d.goals || []).forEach(g => {
+        if (g.alloc) return;
+        g.alloc = {}; let need = g.saved || 0;
+        for (const s of srcs) { if (need <= 0) break; const t = Math.min(need, Math.max(0, s.left)); if (t > 0) { g.alloc[s.key] = t; s.left -= t; need -= t; } }
+        g.saved = Object.values(g.alloc).reduce((a, b) => a + b, 0);
+      });
+      d.v = 3;
     }
     return {
       ...base, ...d,
@@ -926,9 +937,10 @@
     const spent = sums(monthTx(t.getFullYear(), t.getMonth())).expense;
     const budgetLeft = state.budget > 0 ? state.budget - spent : null;
     const hasAcc = state.accounts.length > 0;
-    const fromAcc = acc - due - fixedLeft;
+    const kept = state.accounts.reduce((a, x) => a + allocOf('c:' + x.id), 0);
+    const fromAcc = acc - kept - due - fixedLeft;
     const value = hasAcc ? (budgetLeft !== null ? Math.min(fromAcc, budgetLeft) : fromAcc) : budgetLeft;
-    return { value, acc, due, fixedLeft, budgetLeft, hasAcc };
+    return { value, acc, kept, due, fixedLeft, budgetLeft, hasAcc };
   }
 
   // ---------- 固定費の自動記録 ----------
@@ -1036,6 +1048,7 @@
     $('#canUse').textContent = sp.value === null ? '—' : yen(sp.value);
     const det = [];
     if (sp.hasAcc) det.push(`口座 <b>${yen(sp.acc)}</b>`);
+    if (sp.hasAcc && sp.kept) det.push(`取り置き <b>-${yen(sp.kept)}</b>`);
     if (sp.hasAcc && sp.due) det.push(`カード <b>-${yen(sp.due)}</b>`);
     if (sp.hasAcc && sp.fixedLeft) det.push(`固定費 <b>-${yen(sp.fixedLeft)}</b>`);
     if (sp.budgetLeft !== null) det.push(`予算のこり <b>${yen(sp.budgetLeft)}</b>`);
@@ -1234,7 +1247,7 @@
         <span class="e">${svgIc(ACC_KINDS[a.kind] || 'bank')}</span>
         <span class="n ellipsis" style="max-width:100%">${esc(a.name)}</span>
         <span class="v"${a.amount < 0 ? ' style="color:var(--expense)"' : ''}>${yen(a.amount)}</span>
-        <span class="small">${a.updated ? a.updated.slice(5).replace('-', '/') + '更新' : ''}</span>
+        <span class="small">${allocOf('c:' + a.id) ? '振り分け ' + yen(allocOf('c:' + a.id)) : (a.updated ? a.updated.slice(5).replace('-', '/') + '更新' : '')}</span>
       </button>`).join('') + `<button class="asset add" id="addAcc">${svgIc('plus')}<span class="n">追加</span></button>`;
   }
   async function editAccount(a) {
@@ -1258,7 +1271,7 @@
     if (!r) return;
     if (r.act === 'del') {
       if (!(await confirmAsk(`「${a.name}」を削除しますか？`))) return;
-      state.accounts = state.accounts.filter(x => x !== a);
+      state.accounts = state.accounts.filter(x => x !== a); dropAlloc('c:' + a.id);
       state.cards.forEach(c => { if (c.accountId === a.id) c.accountId = ''; });
       save(); render(); resetForm(); toast('削除しました');
     } else editAccount(a);
@@ -1320,7 +1333,7 @@
         <span class="e">${svgIc(ASSET_KINDS[a.kind] || 'gem')}</span>
         <span class="n ellipsis" style="max-width:100%">${esc(a.name)}</span>
         <span class="v">${yen(a.amount)}</span>
-        <span class="small">${esc(a.kind)}${a.updated ? '・' + a.updated.slice(5).replace('-', '/') + '更新' : ''}</span>
+        <span class="small">${allocOf('a:' + a.id) ? '振り分け ' + yen(allocOf('a:' + a.id)) : esc(a.kind)}</span>
       </button>`).join('') + `<button class="asset add" id="addAsset">${svgIc('plus')}<span class="n">追加</span></button>`;
   }
   async function editAsset(a) {
@@ -1344,7 +1357,7 @@
     if (!r) return;
     if (r.act === 'del') {
       if (!(await confirmAsk(`「${a.name}」を削除しますか？`))) return;
-      state.assets = state.assets.filter(x => x !== a); save(); render(); toast('削除しました');
+      state.assets = state.assets.filter(x => x !== a); dropAlloc('a:' + a.id); save(); render(); toast('削除しました');
     } else editAsset(a);
   });
 
@@ -1366,8 +1379,15 @@
   const goalsSaved = () => state.goals.reduce((a, g) => a + g.saved, 0);
   const assetsTotal = () => state.assets.reduce((a, x) => a + x.amount, 0);
   const wealth = () => assetsTotal() + accTotal();
-  // 振り分けできるお金 = 動かさないお金 − 目標に振り分け済み
-  const freeMoney = () => assetsTotal() - goalsSaved();
+  // 振り分け：目標ごとに「どこ（口座／動かさないお金）からいくら」を持つ
+  const allocOf = key => state.goals.reduce((a, g) => a + (g.alloc?.[key] || 0), 0);
+  const sources = () => [
+    ...state.assets.map(a => ({ key: 'a:' + a.id, name: a.name, obj: a })),
+    ...state.accounts.map(a => ({ key: 'c:' + a.id, name: a.name, obj: a }))
+  ].map(x => ({ ...x, free: x.obj.amount - allocOf(x.key) }));
+  const freeMoney = () => sources().reduce((a, x) => a + x.free, 0);
+  const syncSaved = g => { g.saved = Object.values(g.alloc || {}).reduce((a, b) => a + b, 0); };
+  const dropAlloc = key => state.goals.forEach(g => { if (g.alloc?.[key]) { delete g.alloc[key]; syncSaved(g); } });
   // 全財産の目標：自分で決めた金額、なければ「目標をぜんぶ達成したときの合計」
   const wealthTarget = () => state.wealthTarget > 0 ? state.wealthTarget
     : (state.goals.length ? Math.max(assetsTotal(), state.goals.reduce((a, g) => a + Math.max(g.target, g.saved), 0)) + accTotal() : 0);
@@ -1444,7 +1464,7 @@
       { name: 'deadline', label: '期限（任意）', type: 'date' }
     ], '作成');
     if (!r || !(r.target > 0)) return;
-    state.goals.push({ id: uid(), name: r.name, target: r.target, saved: 0, deadline: r.deadline || '', history: [] });
+    state.goals.push({ id: uid(), name: r.name, target: r.target, saved: 0, alloc: {}, deadline: r.deadline || '', history: [] });
     save(); render();
   }
   async function addPlace() {
@@ -1533,7 +1553,7 @@
         <div class="row"><strong class="ellipsis">${esc(g.name)}</strong><span class="small">${Math.floor(pct)}%</span></div>
         <div class="row" style="margin:2px 0 6px"><span class="amount" style="font-size:20px">${yen(g.saved)}</span><span class="small">目標 ${yen(g.target)}</span></div>
         <div class="bar pink"><div style="width:${pct}%"></div></div>
-        <div class="small" style="margin-top:6px">${remain > 0 ? `あと ${yen(remain)}` : '達成'}</div>
+        <div class="small" style="margin-top:6px">${remain > 0 ? `あと ${yen(remain)}` : '達成'}${Object.keys(g.alloc || {}).length ? '・' + Object.entries(g.alloc).map(([k, v]) => `${esc(sources().find(x => x.key === k)?.name || '')} ${yen(v)}`).join('、') : ''}</div>
         ${hint ? `<div class="small">${hint}</div>` : ''}
         <div class="actions">
           <button class="primary icon" data-dep="${g.id}">＋ 振り分け</button>
@@ -1552,17 +1572,37 @@
       state.goals = state.goals.filter(x => x.id !== id); save(); render(); return;
     }
     const isDep = !!b.dataset.dep;
-    const free = Math.max(0, freeMoney());
-    if (isDep && free <= 0) { toast(state.assets.length ? '振り分けできるお金がありません' : '先に動かさないお金を追加'); return; }
-    const max = isDep ? Math.min(free, Math.max(0, g.target - g.saved) || free) : g.saved;
-    const r = await ask(isDep ? `${g.name}に振り分け` : `${g.name}から戻す`, [
-      { name: 'amt', label: `金額（最大 ${yen(isDep ? free : g.saved)}）`, type: 'number', required: true, min: 1, max: isDep ? free : g.saved, value: isDep ? max : '', big: true }
-    ], isDep ? '振り分け' : '戻す');
-    if (!r || !(r.amt > 0)) return;
-    const n = isDep ? Math.min(r.amt, free) : -Math.min(r.amt, g.saved);
+    g.alloc = g.alloc || {};
     const before = g.saved;
-    g.saved += n;
-    (g.history = g.history || []).push({ date: todayStr(), amount: n });
+    if (isDep) {
+      const srcs = sources().filter(x => x.free > 0);
+      if (!srcs.length) { toast(state.assets.length || state.accounts.length ? '振り分けできるお金がありません' : '先に口座か動かさないお金を追加'); return; }
+      const best = srcs.reduce((m, x) => x.free > m.free ? x : m, srcs[0]);
+      const need = Math.max(0, g.target - g.saved);
+      const r = await ask(`${g.name}に振り分け`, [
+        { name: 'src', label: 'どこのお金？', type: 'select', options: srcs.map(x => [x.key, `${x.name}（${yen(x.free)}）`]), value: best.key },
+        { name: 'amt', label: '金額', type: 'number', required: true, min: 1, value: Math.min(best.free, need || best.free), big: true }
+      ], '振り分け');
+      if (!r || !(r.amt > 0)) return;
+      const src = srcs.find(x => x.key === r.src);
+      const n = Math.min(r.amt, src.free);
+      g.alloc[src.key] = (g.alloc[src.key] || 0) + n;
+      (g.history = g.history || []).push({ date: todayStr(), amount: n, src: src.key });
+      if (n < r.amt) toast(`${src.name}は ${yen(n)} まで`);
+    } else {
+      const srcs = Object.entries(g.alloc).filter(([, v]) => v > 0).map(([k, v]) => ({ key: k, amt: v, name: sources().find(x => x.key === k)?.name || '不明' }));
+      if (!srcs.length) return;
+      const r = await ask(`${g.name}から戻す`, [
+        ...(srcs.length > 1 ? [{ name: 'src', label: 'どこに戻す？', type: 'select', options: srcs.map(x => [x.key, `${x.name}（${yen(x.amt)}）`]), value: srcs[0].key }] : []),
+        { name: 'amt', label: `金額（最大 ${yen(srcs.length > 1 ? Math.max(...srcs.map(x => x.amt)) : srcs[0].amt)}）`, type: 'number', required: true, min: 1, big: true }
+      ], '戻す');
+      if (!r || !(r.amt > 0)) return;
+      const src = srcs.find(x => x.key === (r.src || srcs[0].key));
+      const n = Math.min(r.amt, src.amt);
+      g.alloc[src.key] -= n; if (!g.alloc[src.key]) delete g.alloc[src.key];
+      (g.history = g.history || []).push({ date: todayStr(), amount: -n, src: src.key });
+    }
+    syncSaved(g);
     markActive();
     save(); render();
     if (isDep && before < g.target && g.saved >= g.target) toast(`${g.name} 達成！`);
