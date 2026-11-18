@@ -101,7 +101,7 @@
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 8px;
   }
   header h1 { font-size: 19px; margin: 0; font-weight: 900; display: flex; align-items: center; gap: 4px; letter-spacing: .03em; }
@@ -341,7 +341,7 @@
   .rainbow .fill.zero::after { display: none; }
   .rainbow .pct { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
   .jar-sub { margin-top: 8px; }
-  .jar-stage { position: relative; width: min(84vw, 340px); aspect-ratio: 1; margin: 6px 0 0; }
+  .jar-stage { position: relative; width: min(84vw, 340px); aspect-ratio: 1; margin: 6px 0 16px; }
   .jar-pig { position: absolute; inset: 0; cursor: pointer; --lv: 110%; transition: --lv 1.4s cubic-bezier(.3, 1.15, .5, 1); animation: float 4s ease-in-out infinite; z-index: 2; }
   .jar-pig img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 18px 22px rgba(150, 90, 210, .28)); user-select: none; -webkit-user-drag: none; }
   .jar-pig .fillimg {
@@ -388,8 +388,9 @@
   .big-btn::after { content: ""; position: absolute; left: 6%; right: 6%; top: 3px; height: 42%; border-radius: 99px; background: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.08)); pointer-events: none; }
   .jar-links { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
   .jar-links button { font-size: 13px; color: var(--muted); }
-  body.on-jar .month-nav { visibility: hidden; }
-  body.on-jar .toast { bottom: auto; top: calc(14px + env(safe-area-inset-top)); }
+  body.on-jar header { display: none; }
+  body.on-jar #tab-jar { padding-top: calc(24px + env(safe-area-inset-top)); }
+  #quick[hidden], .jar-links button[hidden] { display: none; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
@@ -436,7 +437,6 @@
 </svg>
 <div class="sparkles" id="sparkles" aria-hidden="true"></div>
 <header>
-  <h1><img src="pig.webp" alt="" width="40" height="40"><span class="grad-text">ぶたさん家計簿</span></h1>
   <div class="month-nav">
     <button id="prevMonth" aria-label="前へ">‹</button>
     <span id="monthLabel"></span>
@@ -476,7 +476,6 @@
           <img class="fillimg" src="pig.webp" alt="" draggable="false">
         </div>
       </div>
-      <div class="jar-say" id="jarSay"></div>
       <div class="quick" role="radiogroup" aria-label="貯金する金額" id="quick">
         <button data-amt="100" role="radio">+¥100</button>
         <button data-amt="500" role="radio" class="on">+¥500</button>
@@ -1040,7 +1039,6 @@
     const [y, m] = data.date.split('-').map(Number);
     viewY = y; viewM = m - 1;
     resetForm(); render();
-    jiggle($('header h1 img'));
   });
   $('#txCancel').addEventListener('click', resetForm);
 
@@ -1159,14 +1157,10 @@
     const mood = saved <= 0 || justWithdrew ? 'sad' : 'happy';
     $('#jarBase').setAttribute('src', mood === 'sad' ? PIG.sad : 'pig-empty.webp');
     $('#jarPig').dataset.mood = mood;
-    $('#jarSay').textContent =
-      !g || saved <= 0 ? 'からっぽ…'
-      : justWithdrew ? 'あっ…'
-      : p >= 1 ? 'おなかいっぱい！'
-      : p >= .75 ? 'あとすこし！'
-      : '';
     $('#jarDeposit').textContent = g ? '＋ 貯金する' : '＋ 目標を作る';
     $('#jarWithdraw').hidden = !g || saved <= 0;
+    $('#jarNew').hidden = !g;
+    $('#quick').hidden = !g;
   }
   function squish() {
     const el = $('#jarPig');
@@ -1223,7 +1217,7 @@
     if (before < g.target && g.saved >= g.target) {
       toast('達成！');
       if (currentTab === 'jar') setTimeout(() => sparkleBurst(28, ['✦', '●', '✦', '♡']), 500);
-    } else toast(`+${yen(amt)}`);
+    } else if (currentTab !== 'jar') toast(`+${yen(amt)}`);
   }
   $('#quick').addEventListener('click', e => {
     const b = e.target.closest('[data-amt]'); if (!b) return;
@@ -1250,7 +1244,6 @@
     g.history.push({ date: todayStr(), amount: -n });
     pigSadUntil = Date.now() + 4000; setTimeout(renderPiggy, 4100);
     save(); render(); squish();
-    toast(`-${yen(n)}`);
   });
   $('#jarNew').addEventListener('click', newGoal);
   function switchGoal(dir) {
