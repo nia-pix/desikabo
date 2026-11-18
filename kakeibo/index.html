@@ -88,11 +88,7 @@
   }
   /* きらきら */
   .sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-  .sparkles i {
-    position: absolute; font-style: normal; color: #fff; opacity: .0;
-    text-shadow: 0 0 8px rgba(255, 180, 240, .9);
-    animation: twinkle 5s ease-in-out infinite;
-  }
+  .sparkles img { position: absolute; opacity: 0; animation: twinkle 5s ease-in-out infinite; }
   @keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.6) rotate(0); } 50% { opacity: .9; transform: scale(1) rotate(20deg); } }
   header, main { position: relative; z-index: 1; }
   header {
@@ -111,7 +107,7 @@
   @keyframes bob { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-3px) rotate(4deg); } }
   @keyframes jiggle { 0% { transform: scale(1); } 25% { transform: scale(1.12, .9); } 50% { transform: scale(.94, 1.08); } 75% { transform: scale(1.04, .97); } 100% { transform: scale(1); } }
   .jiggle { animation: jiggle .6s ease !important; }
-  @media (prefers-reduced-motion: reduce) { header h1 img, .mascot img, .sparkles i { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { header h1 img, .mascot img, .sparkles img, .bubbles img { animation: none !important; } }
   .month-nav {
     display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 99px;
     background: var(--glass); border: 1.5px solid var(--glass-edge);
@@ -361,15 +357,19 @@
     border: 1px solid rgba(255,255,255,.6);
     animation: drift 7s ease-in-out infinite;
   }
-  .bubbles i { position: absolute; font-style: normal; color: #c9b6d8; z-index: 1; animation: twinkle 4s ease-in-out infinite; text-shadow: 0 0 6px #fff; }
+  .bubbles img { position: absolute; z-index: 1; animation: twinkle 4s ease-in-out infinite; }
   @keyframes drift { 0%,100% { transform: translate(0, 0); } 50% { transform: translate(4px, -10px); } }
-  .coin {
-    position: absolute; left: 50%; top: -6%; width: 46px; height: 46px; margin-left: -23px; border-radius: 50%; z-index: 3;
-    background: radial-gradient(circle at 35% 30%, #fff6cf, #ffd76a 45%, #e8a92e);
-    box-shadow: inset 0 -3px 4px rgba(160, 100, 0, .35), 0 4px 10px rgba(200, 140, 30, .4);
-    display: grid; place-items: center; color: #b07a10; font-weight: 900; font-size: 20px;
+  .coin { position: absolute; left: 50%; top: -6%; width: 52px; height: 52px; margin-left: -26px; z-index: 3; filter: drop-shadow(0 4px 6px rgba(200, 140, 30, .35)); }
+  .burst { position: absolute; left: 50%; top: 40%; z-index: 4; pointer-events: none; }
+  .pop { position: absolute; z-index: 5; pointer-events: none; width: 60px; height: 60px; margin: -30px 0 0 -30px; filter: drop-shadow(0 4px 8px rgba(255, 120, 180, .35)); }
+  .streak {
+    position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 2px; padding: 4px 10px 4px 6px; border-radius: 99px;
+    background: var(--glass); border: 1.5px solid var(--glass-edge); font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums;
+    color: #ff7a6b; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
-  .burst { position: absolute; left: 50%; top: 40%; z-index: 4; pointer-events: none; font-style: normal; font-size: 18px; color: #ffd6f5; text-shadow: 0 0 8px #ff9ad5; }
+  .streak img { width: 24px; height: 24px; }
+  .streak[hidden] { display: none; }
+  .jar-screen { position: relative; }
   .jar-say { margin: 4px 0 14px; font-size: 13px; font-weight: 700; color: var(--muted); min-height: 1.5em; }
   .quick {
     display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 4px; width: 100%; max-width: 420px; padding: 6px;
@@ -457,6 +457,7 @@
   <!-- ちょきん -->
   <section id="tab-jar">
     <div class="jar-screen">
+      <div class="streak" id="streak" hidden title="連続記録"><img src="fx/flame.webp" alt="連続"><span id="streakN"></span></div>
       <div class="jar-goal"><span id="jarName">全財産</span></div>
       <div class="jar-amount" id="jarAmount">¥0</div>
       <div class="rainbow" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="jarProgress" title="目標を設定">
@@ -470,10 +471,11 @@
           <span style="right:6%;top:15%;width:6%;height:6%;animation-delay:-5s"></span>
           <span style="left:16%;top:32%;width:4%;height:4%"></span>
           <span style="right:10%;top:60%;width:5%;height:5%;animation-delay:-2s"></span>
-          <i style="left:4%;top:20%;font-size:22px">✦</i>
-          <i style="left:16%;top:8%;font-size:14px;animation-delay:-1.5s">✦</i>
-          <i style="right:0;top:4%;font-size:28px;animation-delay:-2.5s">✦</i>
-          <i style="right:2%;top:76%;font-size:20px;animation-delay:-.8s">✦</i>
+          <img src="fx/sp-white.webp" alt="" style="left:2%;top:18%;width:26px">
+          <img src="fx/sp-pink.webp" alt="" style="left:15%;top:6%;width:18px;animation-delay:-1.5s">
+          <img src="fx/sp-rainbow.webp" alt="" style="right:-2%;top:2%;width:34px;animation-delay:-2.5s">
+          <img src="fx/sp-purple.webp" alt="" style="right:0;top:74%;width:24px;animation-delay:-.8s">
+          <img src="fx/star-yellow.webp" alt="" style="left:6%;top:70%;width:20px;animation-delay:-3.2s">
         </div>
         <div class="jar-shadow"></div>
         <div class="jar-pig" id="jarPig" role="img" aria-label="貯金ぶた">
@@ -798,21 +800,42 @@
     jiggle(el);
   }
   let pigSadUntil = 0;
-  const TAPS_SAD = ['しくしく…', 'おなかすいた…', 'からっぽ…'];
-  const TAPS = ['ぷにっ', 'ぶひっ', 'ちょきんしよ', 'えらい！'];
+  // 素材
+  const FX = {
+    stars: ['star-yellow', 'star-pink', 'star-mint', 'star-blue', 'star-purple'],
+    hearts: ['heart-pink', 'heart-purple', 'heart-blue'],
+    sparkles: ['sp-white', 'sp-pink', 'sp-rainbow', 'sp-purple'],
+    coins: ['coin-gold', 'coin-star', 'coin-silver']
+  };
+  const fxSrc = n => `fx/${n}.webp`;
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  // ぶたさんをタップ → ハートがふわっと出る
   ['#heroPig', '#jarPig'].forEach(sel => $(sel).addEventListener('click', e => {
-    jiggle(e.currentTarget);
-    const list = e.currentTarget.dataset.mood === 'sad' ? TAPS_SAD : TAPS;
-    toast(list[Math.floor(Math.random() * list.length)]);
+    const pig = e.currentTarget;
+    jiggle(pig);
+    const host = pig.closest('.jar-stage, .mascot');
+    const r = host.getBoundingClientRect();
+    const h = document.createElement('img');
+    h.className = 'pop'; h.alt = '';
+    h.src = fxSrc(pig.dataset.mood === 'sad' ? 'heart-blue' : pick(['heart-pink', 'heart-purple']));
+    h.style.left = (e.clientX - r.left) + 'px'; h.style.top = (e.clientY - r.top) + 'px';
+    host.appendChild(h);
+    const dx = (Math.random() - .5) * 40;
+    h.animate([
+      { transform: 'translate(0,0) scale(.3)', opacity: 0 },
+      { transform: `translate(${dx * .3}px,-24px) scale(1.15)`, opacity: 1, offset: .2 },
+      { transform: `translate(${dx * .7}px,-70px) scale(1)`, opacity: 1, offset: .65 },
+      { transform: `translate(${dx}px,-110px) scale(.9)`, opacity: 0 }
+    ], { duration: 1300, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => h.remove();
   }));
   (function sparkles() {
-    const box = $('#sparkles'), marks = ['✦', '✧', '⋆', '✦', '♡'];
-    for (let i = 0; i < 14; i++) {
-      const el = document.createElement('i');
-      el.textContent = marks[i % marks.length];
+    const box = $('#sparkles');
+    for (let i = 0; i < 12; i++) {
+      const el = document.createElement('img');
+      el.src = fxSrc(FX.sparkles[i % FX.sparkles.length]); el.alt = '';
       el.style.left = Math.random() * 100 + '%';
       el.style.top = Math.random() * 100 + '%';
-      el.style.fontSize = 8 + Math.random() * 12 + 'px';
+      el.style.width = 10 + Math.random() * 14 + 'px';
       el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
       el.style.animationDuration = (4 + Math.random() * 4).toFixed(2) + 's';
       box.appendChild(el);
@@ -831,6 +854,22 @@
     if (bal > 0) return say('プラス！えらい');
     if (s.income === 0) return say('収入も記録しよう');
     return say('マイナス…', true);
+  }
+
+  // ---------- 連続記録（炎） ----------
+  function markActive() {
+    const d = todayStr();
+    state.activeDays = state.activeDays || [];
+    if (!state.activeDays.includes(d)) { state.activeDays.push(d); state.activeDays = state.activeDays.slice(-400); }
+  }
+  function streak() {
+    const set = new Set(state.activeDays || []);
+    const d = new Date();
+    const key = x => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+    if (!set.has(key(d))) d.setDate(d.getDate() - 1); // 今日まだでも昨日まで続いていればOK
+    let n = 0;
+    while (set.has(key(d))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
   }
 
   // ---------- 口座・カードへの反映 ----------
@@ -1120,7 +1159,7 @@
       toast('更新しました');
     } else {
       const t = { id: uid(), ...data };
-      state.tx.push(t); applyTx(t, 1);
+      state.tx.push(t); applyTx(t, 1); markActive();
       toast(`${txCat} ${yen(amount)}`);
     }
     save();
@@ -1347,32 +1386,35 @@
     $('#jarWithdraw').hidden = total <= 0;
     $('#jarNew').hidden = !hasPlace;
     $('#tab-jar').classList.toggle('no-goal', !hasPlace);
+    const sk = streak();
+    $('#streak').hidden = sk < 1;
+    $('#streakN').textContent = sk;
   }
   function squish() {
     const el = $('#jarPig');
     el.classList.remove('squish'); void el.offsetWidth; el.classList.add('squish');
   }
-  function sparkleBurst(n = 10, marks = ['✦', '✧', '♡', '⋆']) {
+  function sparkleBurst(n = 10, kinds = [...FX.sparkles, ...FX.stars]) {
     const stage = $('#jarStage');
     for (let i = 0; i < n; i++) {
-      const el = document.createElement('i');
-      el.className = 'burst';
-      el.textContent = marks[i % marks.length];
-      el.style.color = ['#ff9fd6', '#b99cff', '#ffd76a', '#8fe0c6', '#9fd2ff'][i % 5];
+      const el = document.createElement('img');
+      el.className = 'burst'; el.alt = '';
+      el.src = fxSrc(kinds[i % kinds.length]);
+      el.style.width = (24 + Math.random() * 20) + 'px';
       stage.appendChild(el);
       const ang = Math.random() * Math.PI * 2, dist = 90 + Math.random() * 80;
       el.animate([
         { transform: 'translate(-50%,-50%) scale(.4)', opacity: 1 },
         { transform: `translate(calc(-50% + ${Math.cos(ang) * dist}px), calc(-50% + ${Math.sin(ang) * dist}px)) scale(1.1) rotate(90deg)`, opacity: 0 }
-      ], { duration: 900 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => el.remove();
+      ], { duration: 1100 + Math.random() * 500, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => el.remove();
     }
   }
   function dropCoin() {
     return new Promise(res => {
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduce) return res();
-      const c = document.createElement('div');
-      c.className = 'coin'; c.textContent = '¥';
+      const c = document.createElement('img');
+      c.className = 'coin'; c.alt = ''; c.src = fxSrc(pick(FX.coins));
       $('#jarStage').appendChild(c);
       c.animate([
         { transform: 'translateY(-40px) rotateY(0) scale(1)', opacity: 0 },
@@ -1408,13 +1450,13 @@
     } else {
       pl.obj.amount += amt; pl.obj.updated = todayStr();
     }
-    state.lastPlace = pl.key;
+    state.lastPlace = pl.key; markActive();
     save();
     if (currentTab === 'jar') { await dropCoin(); squish(); sparkleBurst(); }
     render();
     if (pl.kind === 'goal' && before < pl.obj.target && pl.obj.saved >= pl.obj.target) {
       toast(`${pl.obj.name} 達成！`);
-      if (currentTab === 'jar') setTimeout(() => sparkleBurst(28, ['✦', '●', '✦', '♡']), 500);
+      if (currentTab === 'jar') setTimeout(() => sparkleBurst(30, [...FX.stars, ...FX.hearts, ...FX.coins, 'sp-rainbow']), 500);
     } else if (currentTab !== 'jar') toast(`+${yen(amt)}`);
   }
   $('#jarDeposit').addEventListener('click', async () => {
