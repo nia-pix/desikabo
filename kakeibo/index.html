@@ -705,6 +705,7 @@
       </div>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
+    <p class="small" style="text-align:center;opacity:.7" id="appVersion"></p>
   </section>
 </main>
 
@@ -731,6 +732,7 @@
 <script>
 (() => {
   const KEY = 'kakeibo-v1';
+  const APP_VERSION = '20';
   const PALETTE = ['#ff8fab','#7fd1b9','#ffc46b','#b9a3f0','#5aa9e6','#ff9e7a','#9bd770','#f4a6d7','#6cc5d9','#d8b48a','#a3a8f0','#c7c7c7'];
   const CAT_ICONS = {
     '食費':'utensils','日用品':'bag','住居':'home','水道光熱':'bolt','通信':'phone','交通':'train','医療':'cross','趣味・娯楽':'music',
@@ -1857,6 +1859,7 @@
 
   applyRecurring();
   save();
+  $('#appVersion').textContent = 'バージョン ' + APP_VERSION;
   setType('expense');
   showTab('jar');
   render();
