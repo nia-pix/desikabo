@@ -514,8 +514,9 @@
     </div>
 
     <div class="card" id="budgetCard">
-      <div class="row"><h2 style="margin:0">今月の予算</h2><span class="small" id="budgetText"></span></div>
-      <div class="bar" id="budgetBar" style="margin-top:10px"><div></div></div>
+      <h2 style="margin:0 0 10px">今月の予算</h2>
+      <div class="row" id="budgetHead"><span class="small" style="font-weight:700">カード以外</span><span class="small" id="budgetText"></span></div>
+      <div class="bar" id="budgetBar" style="margin-top:6px"><div></div></div>
       <div class="small" id="budgetRemain" style="margin-top:6px"></div>
       <ul class="list" id="catBudgetList" style="margin-top:8px"></ul>
       <div class="small" id="cardBudgetHead" style="font-weight:700;margin:14px 0 2px">クレジットカード</div>
@@ -653,7 +654,7 @@
     <div class="card">
       <h2>予算</h2>
       <form id="budgetForm">
-        <label>月の予算
+        <label>月の予算（カード以外）
           <input type="number" id="budgetInput" min="0" step="1" inputmode="numeric" placeholder="150000">
         </label>
         <div class="small" style="font-weight:700;margin:14px 0 6px">カテゴリ別</div>
@@ -812,6 +813,7 @@
   };
   const soft = hex => hex + '33';
   const monthTx = (y = viewY, m = viewM) => { const k = monthKey(y, m); return state.tx.filter(t => t.date.startsWith(k)); };
+  const nonCard = list => list.filter(t => t.type === 'expense' && !(t.pay || '').startsWith('card:')).reduce((a, t) => a + t.amount, 0);
   const sums = list => list.reduce((a, t) => { a[t.type] += t.amount; return a; }, { income: 0, expense: 0 });
 
   // ---------- ぶたさん ----------
@@ -874,7 +876,7 @@
     const say = (text, sad = false) => ({ text, sad });
     if (!list.length) return say('記録してみよう');
     if (state.budget > 0) {
-      const pct = Math.round(s.expense / state.budget * 100), remain = state.budget - s.expense;
+      const sp = nonCard(list), pct = Math.round(sp / state.budget * 100), remain = state.budget - sp;
       if (remain < 0) return say(`予算オーバー ${yen(-remain)}`, true);
       if (pct >= 85) return say(`予算のこり ${yen(remain)}`, true);
       return say(`予算の ${pct}%`);
@@ -940,7 +942,7 @@
     const fixedLeft = state.recurring
       .filter(r => r.type === 'expense' && (r.last || '') < curKey && r.start <= curKey && r.pay?.split(':')[0] !== 'card')
       .reduce((a, r) => a + r.amount, 0);
-    const spent = sums(monthTx(t.getFullYear(), t.getMonth())).expense;
+    const spent = nonCard(monthTx(t.getFullYear(), t.getMonth()));
     const budgetLeft = state.budget > 0 ? state.budget - spent : null;
     const hasAcc = state.accounts.length > 0;
     const kept = state.accounts.reduce((a, x) => a + allocOf('c:' + x.id), 0);
@@ -1073,13 +1075,14 @@
     if (state.budget > 0 || catB.length || hasCards) {
       card.hidden = false;
       const hasTotal = state.budget > 0;
-      $('#budgetBar').hidden = $('#budgetRemain').hidden = !hasTotal;
+      $('#budgetBar').hidden = $('#budgetRemain').hidden = $('#budgetHead').hidden = !hasTotal;
       if (hasTotal) {
-        const pct = Math.min(100, s.expense / state.budget * 100);
-        $('#budgetBar').classList.toggle('over', s.expense > state.budget);
+        const nc = nonCard(list);
+        const pct = Math.min(100, nc / state.budget * 100);
+        $('#budgetBar').classList.toggle('over', nc > state.budget);
         $('#budgetBar > div').style.width = pct + '%';
-        $('#budgetText').textContent = `${yen(s.expense)} / ${yen(state.budget)}`;
-        const remain = state.budget - s.expense;
+        $('#budgetText').textContent = `${yen(nc)} / ${yen(state.budget)}`;
+        const remain = state.budget - nc;
         $('#budgetRemain').textContent = remain >= 0 ? `のこり ${yen(remain)}` : `${yen(-remain)} オーバー`;
       } else $('#budgetText').textContent = '';
       $('#catBudgetList').innerHTML = catB.map(([c, b]) => {
@@ -1089,7 +1092,7 @@
           <div class="bar thin pink${over ? ' over' : ''}" style="margin-top:4px"><div style="width:${Math.min(100, used / b * 100)}%"></div></div></div></li>`;
       }).join('');
       // クレジットカード：その月にカード払いで記録した支出と連動
-      $('#cardBudgetHead').hidden = !hasCards || !(state.budget > 0 || catB.length);
+      $('#cardBudgetHead').hidden = !hasCards;
       $('#cardBudgetList').innerHTML = state.cards.map(c => {
         const used = list.filter(t => t.type === 'expense' && t.pay === 'card:' + c.id).reduce((a, t) => a + t.amount, 0);
         const b = c.budget || 0, over = b && used > b, n = nextDue(c.day);
