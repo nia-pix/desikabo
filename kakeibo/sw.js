@@ -1,5 +1,5 @@
 // オフラインでも開けるようにするサービスワーカー
-const CACHE = 'kakeibo-v9';
+const CACHE = 'kakeibo-v10';
 const FILES = ['./', './index.html', './manifest.webmanifest', './pig.webp', './pig-sad.webp', './pig-empty.webp', './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

@@ -395,6 +395,10 @@
   body.on-jar #tab-jar { padding-top: max(12px, env(safe-area-inset-top)); }
   .jar-links button[hidden], .rainbow[hidden] { display: none; }
   .rainbow { cursor: pointer; }
+  .hero .detail { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 8px; font-size: 12px; opacity: .95; position: relative; }
+  .hero .detail b { font-weight: 900; font-variant-numeric: tabular-nums; }
+  .hero .reg { margin-top: 8px; background: rgba(255,255,255,.85); color: var(--accent); border: 0; text-shadow: none; }
+  .due { font-size: 12px; padding: 4px 10px; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
@@ -436,6 +440,7 @@
   <symbol id="i-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11l3.5 5-9 11.5L3 9z"/><path d="M3 9h18M9.5 4 12 9l2.5-5"/></symbol>
   <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
   <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m17 3 3 3-3 3"/><path d="M4 12v-2a4 4 0 0 1 4-4h12M7 21l-3-3 3-3"/><path d="M20 12v2a4 4 0 0 1-4 4H4"/></symbol>
 </svg>
@@ -489,12 +494,13 @@
     <div class="card hero">
       <div class="hero-top">
         <div class="grow">
-          <div class="label">今月の収支</div>
-          <div class="big" id="sumBalance"></div>
+          <div class="label">今月あと使える</div>
+          <div class="big" id="canUse"></div>
+          <div class="detail" id="canUseDetail"></div>
+          <button class="reg icon" id="regAccount" hidden>口座を登録</button>
         </div>
         <div class="mascot"><img src="pig.webp" alt="ぶたさん" id="heroPig" width="104" height="104"></div>
       </div>
-      <div class="say" id="pigSay"></div>
       <div class="sub">
         <div><div class="label">収入</div><div class="v" id="sumIncome"></div></div>
         <div><div class="label">支出</div><div class="v" id="sumExpense"></div></div>
@@ -521,8 +527,8 @@
     <div class="card">
       <h2>ぜんぶのお金</h2>
       <div class="kpis">
-        <div class="kpi"><div class="small">貯金目標</div><div class="v" id="totGoals"></div></div>
-        <div class="kpi"><div class="small">動かさないお金</div><div class="v" id="totAssets"></div></div>
+        <div class="kpi"><div class="small">口座</div><div class="v" id="totAcc"></div></div>
+        <div class="kpi"><div class="small">貯金</div><div class="v" id="totGoals"></div></div>
         <div class="kpi"><div class="small">合計</div><div class="v" id="totAll" style="color:var(--accent-dark)"></div></div>
       </div>
       <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="mint" id="goSavings">一覧 <svg class="ic"><use href="#i-chev"/></svg></button></div>
@@ -551,6 +557,9 @@
         <label>メモ
           <input type="text" id="txMemo" maxlength="60" placeholder="任意">
         </label>
+        <label class="full" id="payWrap"><span id="payLabel">支払い</span>
+          <select id="txPay"></select>
+        </label>
         <div class="full row" style="justify-content:flex-end">
           <button type="button" id="txCancel" hidden>キャンセル</button>
           <button type="submit" class="primary" id="txSubmit">追加</button>
@@ -569,6 +578,19 @@
 
   <!-- お金（貯金・資産） -->
   <section id="tab-savings" hidden>
+    <div class="card">
+      <h2>口座・財布</h2>
+      <div class="assets-grid" id="accList"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px">
+        <h2 style="margin:0">クレジットカード</h2>
+        <button class="icon" id="addCard">＋ 追加</button>
+      </div>
+      <ul class="list" id="cardList"></ul>
+    </div>
+
     <div class="card">
       <h2>動かさないお金</h2>
       <div class="assets-grid" id="assetList"></div>
@@ -690,12 +712,15 @@
     '交際費':'cup','衣服':'shirt','美容':'sparkle','サブスク':'tv','その他':'dots',
     '給与':'yen','副業':'laptop','賞与':'gift','臨時収入':'star'
   };
+  const ACC_KINDS = { '銀行':'bank', '財布':'wallet', '電子マネー':'phone' };
   const ASSET_KINDS = { '定期預金':'lock', '普通預金':'bank', '積立':'sprout', '投資':'chart', '現金':'wallet', 'へそくり':'box', 'その他':'gem' };
   const svgIc = n => `<svg class="ic"><use href="#i-${n}"/></svg>`;
   const DEFAULT = () => ({
     tx: [],
     goals: [],
     assets: [],
+    accounts: [],
+    cards: [],
     recurring: [],
     budget: 0,
     catBudgets: {},
@@ -720,7 +745,7 @@
     const base = DEFAULT();
     return {
       ...base, ...d,
-      assets: d.assets || [], recurring: d.recurring || [], catBudgets: d.catBudgets || {},
+      assets: d.assets || [], accounts: d.accounts || [], cards: d.cards || [], recurring: d.recurring || [], catBudgets: d.catBudgets || {},
       categories: { ...base.categories, ...(d.categories || {}) }
     };
   }
@@ -808,6 +833,53 @@
     return say('マイナス…', true);
   }
 
+  // ---------- 口座・カードへの反映 ----------
+  // 記録に「支払い（入金先）」があれば、口座残高やカードの引き落とし予定に反映する
+  function applyTx(t, sign) {
+    if (!t.pay) return;
+    const [k, id] = t.pay.split(':');
+    if (k === 'acc') {
+      const a = state.accounts.find(x => x.id === id);
+      if (a) { a.amount += sign * (t.type === 'income' ? t.amount : -t.amount); a.updated = todayStr(); }
+    } else if (k === 'card' && t.type === 'expense') {
+      const c = state.cards.find(x => x.id === id);
+      if (c) c.due = (c.due || 0) + sign * t.amount;
+    }
+  }
+  function payOptions(type) {
+    const opts = [['', type === 'income' ? '指定なし' : '現金・その他']];
+    state.accounts.forEach(a => opts.push(['acc:' + a.id, a.name]));
+    if (type === 'expense') state.cards.forEach(c => opts.push(['card:' + c.id, c.name]));
+    return opts;
+  }
+  const payName = pay => {
+    if (!pay) return '';
+    const [k, id] = pay.split(':');
+    return (k === 'acc' ? state.accounts : state.cards).find(x => x.id === id)?.name || '';
+  };
+  // 次の引き落とし日
+  function nextDue(day) {
+    const t = new Date();
+    let y = t.getFullYear(), m = t.getMonth();
+    if (t.getDate() > Math.min(day, daysIn(y, m))) { m++; if (m > 11) { m = 0; y++; } }
+    return { y, m, d: Math.min(day, daysIn(y, m)) };
+  }
+  // 今月あと使えるお金
+  function spendable() {
+    const t = new Date(), curKey = monthKey(t.getFullYear(), t.getMonth());
+    const acc = state.accounts.reduce((a, x) => a + x.amount, 0);
+    const due = state.cards.reduce((a, c) => a + Math.max(0, c.due || 0), 0);
+    const fixedLeft = state.recurring
+      .filter(r => r.type === 'expense' && (r.last || '') < curKey && r.start <= curKey && r.pay?.split(':')[0] !== 'card')
+      .reduce((a, r) => a + r.amount, 0);
+    const spent = sums(monthTx(t.getFullYear(), t.getMonth())).expense;
+    const budgetLeft = state.budget > 0 ? state.budget - spent : null;
+    const hasAcc = state.accounts.length > 0;
+    const fromAcc = acc - due - fixedLeft;
+    const value = hasAcc ? (budgetLeft !== null ? Math.min(fromAcc, budgetLeft) : fromAcc) : budgetLeft;
+    return { value, acc, due, fixedLeft, budgetLeft, hasAcc };
+  }
+
   // ---------- 固定費の自動記録 ----------
   function applyRecurring() {
     const t = new Date(), curY = t.getFullYear(), curM = t.getMonth(), curKey = monthKey(curY, curM);
@@ -818,7 +890,8 @@
       while (monthKey(y, m) <= curKey) {
         const day = Math.min(r.day, daysIn(y, m));
         if (monthKey(y, m) === curKey && day > t.getDate()) break;
-        state.tx.push({ id: uid(), type: r.type, amount: r.amount, category: r.category, date: `${monthKey(y, m)}-${pad(day)}`, memo: r.name, recurringId: r.id });
+        const nt = { id: uid(), type: r.type, amount: r.amount, category: r.category, date: `${monthKey(y, m)}-${pad(day)}`, memo: r.name, recurringId: r.id, pay: r.pay || '' };
+        state.tx.push(nt); applyTx(nt, 1);
         r.last = monthKey(y, m);
         added++;
         m++; if (m > 11) { m = 0; y++; }
@@ -908,10 +981,17 @@
     const bal = s.income - s.expense;
     $('#sumIncome').textContent = yen(s.income);
     $('#sumExpense').textContent = yen(s.expense);
-    $('#sumBalance').textContent = (bal > 0 ? '+' : '') + yen(bal);
+    const sp = spendable();
+    $('#canUse').textContent = sp.value === null ? '—' : yen(sp.value);
+    const det = [];
+    if (sp.hasAcc) det.push(`口座 <b>${yen(sp.acc)}</b>`);
+    if (sp.hasAcc && sp.due) det.push(`カード <b>-${yen(sp.due)}</b>`);
+    if (sp.hasAcc && sp.fixedLeft) det.push(`固定費 <b>-${yen(sp.fixedLeft)}</b>`);
+    if (sp.budgetLeft !== null) det.push(`予算のこり <b>${yen(sp.budgetLeft)}</b>`);
+    $('#canUseDetail').innerHTML = det.map(x => `<span style="white-space:nowrap">${x}</span>`).join('');
+    $('#regAccount').hidden = sp.hasAcc;
     const msg = homeMessage(s, list);
-    $('#pigSay').textContent = msg.text;
-    setPig($('#heroPig'), msg.sad ? 'sad' : 'happy');
+    setPig($('#heroPig'), (sp.value !== null && sp.value < 0) || msg.sad ? 'sad' : 'happy');
 
     const byCat = {};
     list.filter(t => t.type === 'expense').forEach(t => byCat[t.category] = (byCat[t.category] || 0) + t.amount);
@@ -981,9 +1061,9 @@
     $('#bars').innerHTML = barChart(months, o => o.y === viewY && o.m === viewM);
 
     const g = state.goals.reduce((a, x) => a + x.saved, 0), as = state.assets.reduce((a, x) => a + x.amount, 0);
-    $('#totGoals').textContent = yen(g);
-    $('#totAssets').textContent = yen(as);
-    $('#totAll').textContent = yen(g + as);
+    $('#totGoals').textContent = yen(g + as);
+    $('#totAcc').textContent = yen(accTotal());
+    $('#totAll').textContent = yen(g + as + accTotal());
   }
 
   // ---------- 記録 ----------
@@ -997,12 +1077,20 @@
     const b = e.target.closest('[data-c]'); if (!b) return;
     txCat = b.dataset.c; renderCatPick();
   });
-  function setType(t, cat) {
+  function renderPay(value) {
+    const opts = payOptions(txType);
+    $('#payWrap').hidden = opts.length <= 1;
+    $('#payLabel').textContent = txType === 'income' ? '入金先' : '支払い';
+    const v = value ?? (state.lastPay?.[txType] || '');
+    $('#txPay').innerHTML = opts.map(([k, l]) => `<option value="${esc(k)}"${k === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
+  }
+  function setType(t, cat, pay) {
     if (t !== txType) txCat = null;
     txType = t;
     if (cat) txCat = cat;
     document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.type === t));
     renderCatPick();
+    renderPay(pay);
   }
   document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setType(b.dataset.type)));
 
@@ -1018,17 +1106,21 @@
     $('#txSubmit').textContent = '追加';
     $('#txCancel').hidden = true;
     renderCatPick();
+    renderPay();
   }
   $('#txForm').addEventListener('submit', e => {
     e.preventDefault();
     const amount = toNum($('#txAmount').value);
     if (!(amount > 0)) { toast('金額を入力'); return; }
-    const data = { type: txType, amount, category: txCat, date: $('#txDate').value, memo: $('#txMemo').value.trim() };
+    const data = { type: txType, amount, category: txCat, date: $('#txDate').value, memo: $('#txMemo').value.trim(), pay: $('#payWrap').hidden ? '' : $('#txPay').value };
+    state.lastPay = { ...(state.lastPay || {}), [txType]: data.pay };
     if (editingId) {
-      Object.assign(state.tx.find(t => t.id === editingId), data);
+      const t = state.tx.find(x => x.id === editingId);
+      applyTx(t, -1); Object.assign(t, data); applyTx(t, 1);
       toast('更新しました');
     } else {
-      state.tx.push({ id: uid(), ...data });
+      const t = { id: uid(), ...data };
+      state.tx.push(t); applyTx(t, 1);
       toast(`${txCat} ${yen(amount)}`);
     }
     save();
@@ -1052,7 +1144,7 @@
         <span class="bubble" style="background:${t.type === 'income' ? 'var(--income-soft)' : soft(catColor(t.category))};color:${t.type === 'income' ? 'var(--income)' : catColor(t.category)}">${icon(t.category)}</span>
         <div class="grow">
           <div class="ellipsis">${esc(t.category)}${t.recurringId ? ' <span class="tag">固定</span>' : ''}</div>
-          <div class="small ellipsis">${t.date.slice(5).replace('-', '/')}${t.memo ? '・' + esc(t.memo) : ''}</div>
+          <div class="small ellipsis">${t.date.slice(5).replace('-', '/')}${payName(t.pay) ? '・' + esc(payName(t.pay)) : ''}${t.memo ? '・' + esc(t.memo) : ''}</div>
         </div>
         <span class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${yen(t.amount)}</span>
         <button class="icon ghost" data-edit="${t.id}" aria-label="編集">${svgIc('pencil')}</button>
@@ -1064,13 +1156,15 @@
     const del = e.target.closest('[data-del]'), ed = e.target.closest('[data-edit]');
     if (del) {
       if (!(await confirmAsk('この記録を削除しますか？'))) return;
+      const dt = state.tx.find(t => t.id === del.dataset.del);
+      if (dt) applyTx(dt, -1);
       state.tx = state.tx.filter(t => t.id !== del.dataset.del);
       if (editingId === del.dataset.del) resetForm();
       save(); render(); toast('削除しました');
     } else if (ed) {
       const t = state.tx.find(x => x.id === ed.dataset.edit);
       editingId = t.id;
-      setType(t.type, t.category);
+      setType(t.type, t.category, t.pay || '');
       $('#txAmount').value = t.amount;
       $('#txDate').value = t.date;
       $('#txMemo').value = t.memo || '';
@@ -1078,6 +1172,93 @@
       $('#txSubmit').textContent = '更新';
       $('#txCancel').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  // ---------- 口座・財布 ----------
+  const accTotal = () => state.accounts.reduce((a, x) => a + x.amount, 0);
+  function renderAccounts() {
+    $('#accList').innerHTML = state.accounts.map(a => `
+      <button class="asset" data-acc="${a.id}">
+        <span class="e">${svgIc(ACC_KINDS[a.kind] || 'bank')}</span>
+        <span class="n ellipsis" style="max-width:100%">${esc(a.name)}</span>
+        <span class="v"${a.amount < 0 ? ' style="color:var(--expense)"' : ''}>${yen(a.amount)}</span>
+        <span class="small">${a.updated ? a.updated.slice(5).replace('-', '/') + '更新' : ''}</span>
+      </button>`).join('') + `<button class="asset add" id="addAcc">${svgIc('plus')}<span class="n">追加</span></button>`;
+  }
+  async function editAccount(a) {
+    const r = await ask(a ? '口座を編集' : '口座・財布を追加', [
+      { name: 'name', label: '名前', required: true, maxlength: 20, value: a?.name, placeholder: '○○銀行' },
+      { name: 'kind', label: '種類', type: 'select', options: Object.keys(ACC_KINDS), value: a?.kind || '銀行' },
+      { name: 'amount', label: '今の残高', type: 'number', required: true, min: -99999999, value: a?.amount, big: true }
+    ], a ? '保存' : '追加');
+    if (!r) return;
+    const data = { name: r.name, kind: r.kind, amount: r.amount || 0, updated: todayStr() };
+    if (a) Object.assign(a, data); else state.accounts.push({ id: uid(), ...data });
+    save(); render(); resetForm(); toast(a ? '更新しました' : '追加しました');
+  }
+  $('#accList').addEventListener('click', async e => {
+    if (e.target.closest('#addAcc')) return editAccount(null);
+    const b = e.target.closest('[data-acc]'); if (!b) return;
+    const a = state.accounts.find(x => x.id === b.dataset.acc);
+    const r = await ask(`${a.name}（${yen(a.amount)}）`, [
+      { name: 'act', label: '操作', type: 'select', options: [['edit', '編集'], ['del', '削除']], value: 'edit' }
+    ], '次へ');
+    if (!r) return;
+    if (r.act === 'del') {
+      if (!(await confirmAsk(`「${a.name}」を削除しますか？`))) return;
+      state.accounts = state.accounts.filter(x => x !== a);
+      state.cards.forEach(c => { if (c.accountId === a.id) c.accountId = ''; });
+      save(); render(); resetForm(); toast('削除しました');
+    } else editAccount(a);
+  });
+  $('#regAccount').addEventListener('click', () => editAccount(null));
+
+  // ---------- クレジットカード ----------
+  function renderCards() {
+    const ul = $('#cardList');
+    if (!state.cards.length) { ul.innerHTML = '<li class="empty" style="display:block">なし</li>'; return; }
+    ul.innerHTML = state.cards.map(c => {
+      const n = nextDue(c.day), acc = state.accounts.find(a => a.id === c.accountId);
+      return `<li>
+        <span class="bubble" style="background:var(--accent-soft);color:var(--accent)">${svgIc('card')}</span>
+        <div class="grow"><div class="ellipsis">${esc(c.name)}</div>
+          <div class="small ellipsis">${n.m + 1}/${n.d}${acc ? '・' + esc(acc.name) : ''}</div></div>
+        <span class="amount expense">${yen(Math.max(0, c.due || 0))}</span>
+        ${c.due > 0 ? `<button class="icon due" data-paid="${c.id}">済</button>` : ''}
+        <button class="icon ghost" data-cedit="${c.id}" aria-label="編集">${svgIc('pencil')}</button>
+      </li>`;
+    }).join('');
+  }
+  async function editCard(c) {
+    const r = await ask(c ? 'カードを編集' : 'カードを追加', [
+      { name: 'name', label: '名前', required: true, maxlength: 20, value: c?.name, placeholder: '○○カード' },
+      { name: 'day', label: '引き落とし日（毎月）', type: 'number', required: true, min: 1, max: 31, value: c?.day || 27 },
+      { name: 'acc', label: '引き落とし口座', type: 'select', options: [['', 'なし'], ...state.accounts.map(a => [a.id, a.name])], value: c?.accountId || state.accounts[0]?.id || '' },
+      { name: 'due', label: '次の引き落とし額', type: 'number', value: c ? Math.max(0, c.due || 0) : '', big: true },
+      ...(c ? [{ name: 'act', label: '', type: 'select', options: [['keep', '保存する'], ['del', 'このカードを削除']], value: 'keep' }] : [])
+    ], c ? 'OK' : '追加');
+    if (!r) return;
+    if (r.act === 'del') {
+      if (!(await confirmAsk(`「${c.name}」を削除しますか？`))) return;
+      state.cards = state.cards.filter(x => x !== c);
+    } else {
+      const data = { name: r.name, day: Math.min(31, Math.max(1, r.day || 1)), accountId: r.acc, due: Math.max(0, r.due || 0) };
+      if (c) Object.assign(c, data); else state.cards.push({ id: uid(), ...data });
+    }
+    save(); render(); resetForm();
+  }
+  $('#addCard').addEventListener('click', () => editCard(null));
+  $('#cardList').addEventListener('click', async e => {
+    const ed = e.target.closest('[data-cedit]'), pd = e.target.closest('[data-paid]');
+    if (ed) return editCard(state.cards.find(c => c.id === ed.dataset.cedit));
+    if (pd) {
+      const c = state.cards.find(x => x.id === pd.dataset.paid);
+      const acc = state.accounts.find(a => a.id === c.accountId);
+      if (!(await confirmAsk(`${yen(c.due)} を引き落とし済みにしますか？${acc ? `（${acc.name}から引きます）` : ''}`, '済みにする'))) return;
+      if (acc) { acc.amount -= c.due; acc.updated = todayStr(); }
+      c.due = 0;
+      save(); render(); toast('引き落とし済み');
     }
   });
 
@@ -1133,14 +1314,15 @@
   }
   const goalsSaved = () => state.goals.reduce((a, g) => a + g.saved, 0);
   const assetsTotal = () => state.assets.reduce((a, x) => a + x.amount, 0);
-  const wealth = () => goalsSaved() + assetsTotal();
+  const wealth = () => goalsSaved() + assetsTotal() + accTotal();
   // 全財産の目標：自分で決めた金額、なければ「目標をぜんぶ達成したときの合計」
   const wealthTarget = () => state.wealthTarget > 0 ? state.wealthTarget
-    : (state.goals.length ? state.goals.reduce((a, g) => a + Math.max(g.target, g.saved), 0) + assetsTotal() : 0);
+    : (state.goals.length ? state.goals.reduce((a, g) => a + Math.max(g.target, g.saved), 0) + assetsTotal() + accTotal() : 0);
   // 入れる先・出す先の一覧（目標と動かさないお金）
   const places = () => [
     ...state.goals.map(g => ({ key: 'g:' + g.id, label: g.name, obj: g, kind: 'goal', bal: g.saved })),
-    ...state.assets.map(a => ({ key: 'a:' + a.id, label: a.name, obj: a, kind: 'asset', bal: a.amount }))
+    ...state.assets.map(a => ({ key: 'a:' + a.id, label: a.name, obj: a, kind: 'asset', bal: a.amount })),
+    ...state.accounts.map(a => ({ key: 'c:' + a.id, label: a.name, obj: a, kind: 'account', bal: a.amount }))
   ];
   function renderPiggy() {
     const total = wealth(), target = wealthTarget();
@@ -1212,10 +1394,10 @@
   }
   async function addPlace() {
     const r = await ask('追加', [
-      { name: 'kind', label: '種類', type: 'select', options: [['goal', '貯金目標'], ['asset', '動かさないお金']], value: 'goal' }
+      { name: 'kind', label: '種類', type: 'select', options: [['goal', '貯金目標'], ['acc', '口座・財布'], ['asset', '動かさないお金']], value: 'goal' }
     ], '次へ');
     if (!r) return;
-    r.kind === 'goal' ? newGoal() : editAsset(null);
+    r.kind === 'goal' ? newGoal() : r.kind === 'acc' ? editAccount(null) : editAsset(null);
   }
   // 貯金（目標でも動かさないお金でも）
   async function putMoney(pl, amt) {
@@ -1357,7 +1539,7 @@
     if (!state.recurring.length) { ul.innerHTML = '<li class="empty" style="display:block">なし</li>'; return; }
     ul.innerHTML = state.recurring.map(r => `
       <li><span class="bubble" style="background:${r.type === 'income' ? 'var(--income-soft)' : soft(catColor(r.category))};color:${r.type === 'income' ? 'var(--income)' : catColor(r.category)}">${icon(r.category)}</span>
-        <div class="grow"><div class="ellipsis">${esc(r.name)}</div><div class="small">毎月${r.day}日・${esc(r.category)}</div></div>
+        <div class="grow"><div class="ellipsis">${esc(r.name)}</div><div class="small">毎月${r.day}日・${esc(r.category)}${payName(r.pay) ? '・' + esc(payName(r.pay)) : ''}</div></div>
         <span class="amount ${r.type}">${r.type === 'income' ? '+' : '-'}${yen(r.amount)}</span>
         <button class="icon ghost" data-recdel="${r.id}" aria-label="削除" style="color:var(--muted)">${svgIc('trash')}</button></li>`).join('');
   }
@@ -1374,10 +1556,11 @@
       { name: 'amount', label: '金額', type: 'number', required: true, min: 1, big: true },
       { name: 'category', label: 'カテゴリ', type: 'select', options: cats, value: cats[0] },
       { name: 'day', label: '毎月の日（1〜31）', type: 'number', required: true, min: 1, max: 31, value: 25 },
+      ...(payOptions(t.type).length > 1 ? [{ name: 'pay', label: t.type === 'income' ? '入金先' : '支払い', type: 'select', options: payOptions(t.type), value: '' }] : []),
       { name: 'start', label: '開始', type: 'select', options: [[thisM, `${now.getMonth() + 1}月から`], [monthKey(ny, nm), `${nm + 1}月から`]], value: thisM }
     ], '登録');
     if (!r || !(r.amount > 0)) return;
-    state.recurring.push({ id: uid(), type: t.type, name: r.name, amount: r.amount, category: r.category, day: Math.min(31, Math.max(1, r.day || 1)), start: r.start, last: '' });
+    state.recurring.push({ id: uid(), type: t.type, name: r.name, amount: r.amount, category: r.category, day: Math.min(31, Math.max(1, r.day || 1)), start: r.start, last: '', pay: r.pay || '' });
     applyRecurring();
     save(); render(); toast('登録しました');
   });
@@ -1437,9 +1620,9 @@
   }
   $('#exportCsv').addEventListener('click', () => {
     const q = s => `"${String(s).replace(/"/g, '""')}"`;
-    const rows = [['日付','種類','カテゴリ','金額','メモ']].concat(
+    const rows = [['日付','種類','カテゴリ','金額','支払い・入金先','メモ']].concat(
       [...state.tx].sort((a, b) => a.date.localeCompare(b.date))
-        .map(t => [t.date, t.type === 'income' ? '収入' : '支出', t.category, t.amount, t.memo || '']));
+        .map(t => [t.date, t.type === 'income' ? '収入' : '支出', t.category, t.amount, payName(t.pay), t.memo || '']));
     download(`kakeibo-${todayStr()}.csv`, '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv');
   });
   $('#exportJson').addEventListener('click', () => download(`kakeibo-backup-${todayStr()}.json`, JSON.stringify(state, null, 2), 'application/json'));
@@ -1477,11 +1660,13 @@
     updateNavLabel();
     renderHome();
     renderRecord();
+    renderAccounts();
+    renderCards();
     renderAssets();
     renderGoals();
     renderYear();
     renderSettings();
-    if (!editingId) $('#txDate').value = defaultDate();
+    if (!editingId) { $('#txDate').value = defaultDate(); renderPay($('#txPay').value || undefined); }
   }
 
   applyRecurring();
