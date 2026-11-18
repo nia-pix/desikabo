@@ -1,6 +1,6 @@
 {
-  "name": "ぶたさん家計簿",
-  "short_name": "ぶたさん家計簿",
+  "name": "貯金箱",
+  "short_name": "貯金箱",
   "description": "かわいい家計簿・貯金アプリ",
   "start_url": "./",
   "scope": "./",
