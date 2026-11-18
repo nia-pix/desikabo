@@ -399,6 +399,10 @@
   .hero .detail b { font-weight: 900; font-variant-numeric: tabular-nums; }
   .hero .reg { margin-top: 8px; background: rgba(255,255,255,.85); color: var(--accent); border: 0; text-shadow: none; }
   .due { font-size: 12px; padding: 4px 10px; }
+  .free { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 14px; margin-bottom: 6px; border-radius: 16px; background: var(--field); border: 1.5px solid var(--glass-edge); font-size: 13px; color: var(--muted); font-weight: 700; }
+  .free b { font-size: 18px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+  .free.over b { color: var(--expense); }
+  .free[hidden] { display: none; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
@@ -603,6 +607,7 @@
         <h2 style="margin:0">貯金目標</h2>
         <button class="primary icon" id="addGoal">＋ 目標を作る</button>
       </div>
+      <div class="free" id="freeMoney"></div>
       <div id="goalList"></div>
     </div>
   </section>
@@ -718,6 +723,7 @@
   const ASSET_KINDS = { '定期預金':'lock', '普通預金':'bank', '積立':'sprout', '投資':'chart', '現金':'wallet', 'へそくり':'box', 'その他':'gem' };
   const svgIc = n => `<svg class="ic"><use href="#i-${n}"/></svg>`;
   const DEFAULT = () => ({
+    v: 2,
     tx: [],
     goals: [],
     assets: [],
@@ -745,6 +751,12 @@
 
   function normalize(d) {
     const base = DEFAULT();
+    if ((d.v || 1) < 2) {
+      const inGoals = (d.goals || []).reduce((a, g) => a + (g.saved || 0), 0);
+      const inAssets = (d.assets || []).reduce((a, x) => a + (x.amount || 0), 0);
+      if (inGoals > inAssets) (d.assets = d.assets || []).push({ id: uid(), name: '貯金', kind: '普通預金', amount: inGoals - inAssets, updated: todayStr() });
+      d.v = 2;
+    }
     return {
       ...base, ...d,
       assets: d.assets || [], accounts: d.accounts || [], cards: d.cards || [], recurring: d.recurring || [], catBudgets: d.catBudgets || {},
@@ -1100,9 +1112,9 @@
     $('#bars').innerHTML = barChart(months, o => o.y === viewY && o.m === viewM);
 
     const g = state.goals.reduce((a, x) => a + x.saved, 0), as = state.assets.reduce((a, x) => a + x.amount, 0);
-    $('#totGoals').textContent = yen(g + as);
+    $('#totGoals').textContent = yen(as);
     $('#totAcc').textContent = yen(accTotal());
-    $('#totAll').textContent = yen(g + as + accTotal());
+    $('#totAll').textContent = yen(as + accTotal());
   }
 
   // ---------- 記録 ----------
@@ -1353,13 +1365,14 @@
   }
   const goalsSaved = () => state.goals.reduce((a, g) => a + g.saved, 0);
   const assetsTotal = () => state.assets.reduce((a, x) => a + x.amount, 0);
-  const wealth = () => goalsSaved() + assetsTotal() + accTotal();
+  const wealth = () => assetsTotal() + accTotal();
+  // 振り分けできるお金 = 動かさないお金 − 目標に振り分け済み
+  const freeMoney = () => assetsTotal() - goalsSaved();
   // 全財産の目標：自分で決めた金額、なければ「目標をぜんぶ達成したときの合計」
   const wealthTarget = () => state.wealthTarget > 0 ? state.wealthTarget
-    : (state.goals.length ? state.goals.reduce((a, g) => a + Math.max(g.target, g.saved), 0) + assetsTotal() + accTotal() : 0);
-  // 入れる先・出す先の一覧（目標と動かさないお金）
+    : (state.goals.length ? Math.max(assetsTotal(), state.goals.reduce((a, g) => a + Math.max(g.target, g.saved), 0)) + accTotal() : 0);
+  // 入れる先・出す先の一覧（動かさないお金と口座）
   const places = () => [
-    ...state.goals.map(g => ({ key: 'g:' + g.id, label: g.name, obj: g, kind: 'goal', bal: g.saved })),
     ...state.assets.map(a => ({ key: 'a:' + a.id, label: a.name, obj: a, kind: 'asset', bal: a.amount })),
     ...state.accounts.map(a => ({ key: 'c:' + a.id, label: a.name, obj: a, kind: 'account', bal: a.amount }))
   ];
@@ -1436,7 +1449,7 @@
   }
   async function addPlace() {
     const r = await ask('追加', [
-      { name: 'kind', label: '種類', type: 'select', options: [['goal', '貯金目標'], ['acc', '口座・財布'], ['asset', '動かさないお金']], value: 'goal' }
+      { name: 'kind', label: '種類', type: 'select', options: [['asset', '動かさないお金'], ['acc', '口座・財布'], ['goal', '貯金目標']], value: 'asset' }
     ], '次へ');
     if (!r) return;
     r.kind === 'goal' ? newGoal() : r.kind === 'acc' ? editAccount(null) : editAsset(null);
@@ -1498,6 +1511,10 @@
   function renderGoals() {
     renderPiggy();
     const box = $('#goalList');
+    const free = freeMoney();
+    $('#freeMoney').hidden = !state.goals.length && !state.assets.length;
+    $('#freeMoney').classList.toggle('over', free < 0);
+    $('#freeMoney').innerHTML = free < 0 ? `振り分けすぎ <b>${yen(-free)}</b>` : `振り分けできる <b>${yen(free)}</b>`;
     if (!state.goals.length) { box.innerHTML = '<div class="empty"><img src="pig-sad.webp" alt="">目標なし</div>'; return; }
     box.innerHTML = state.goals.map(g => {
       const pct = Math.min(100, g.saved / g.target * 100);
@@ -1519,8 +1536,8 @@
         <div class="small" style="margin-top:6px">${remain > 0 ? `あと ${yen(remain)}` : '達成'}</div>
         ${hint ? `<div class="small">${hint}</div>` : ''}
         <div class="actions">
-          <button class="primary icon" data-dep="${g.id}">＋ 貯金</button>
-          <button class="icon" data-wd="${g.id}">− 引き出し</button>
+          <button class="primary icon" data-dep="${g.id}">＋ 振り分け</button>
+          ${g.saved > 0 ? `<button class="icon" data-wd="${g.id}">− 戻す</button>` : ''}
           <button class="icon ghost danger" data-gdel="${g.id}" style="margin-left:auto">削除</button>
         </div>
       </div>`;
@@ -1535,18 +1552,20 @@
       state.goals = state.goals.filter(x => x.id !== id); save(); render(); return;
     }
     const isDep = !!b.dataset.dep;
-    const r = await ask(isDep ? '貯金する' : '引き出す', [
-      { name: 'amt', label: isDep ? '金額' : `金額（最大 ${yen(g.saved)}）`, type: 'number', required: true, min: 1, max: isDep ? undefined : g.saved, big: true }
-    ], isDep ? '貯金' : '引き出す');
+    const free = Math.max(0, freeMoney());
+    if (isDep && free <= 0) { toast(state.assets.length ? '振り分けできるお金がありません' : '先に動かさないお金を追加'); return; }
+    const max = isDep ? Math.min(free, Math.max(0, g.target - g.saved) || free) : g.saved;
+    const r = await ask(isDep ? `${g.name}に振り分け` : `${g.name}から戻す`, [
+      { name: 'amt', label: `金額（最大 ${yen(isDep ? free : g.saved)}）`, type: 'number', required: true, min: 1, max: isDep ? free : g.saved, value: isDep ? max : '', big: true }
+    ], isDep ? '振り分け' : '戻す');
     if (!r || !(r.amt > 0)) return;
-    const n = isDep ? r.amt : -Math.min(r.amt, g.saved);
-    if (!isDep) { pigSadUntil = Date.now() + 4000; setTimeout(renderPiggy, 4100); }
+    const n = isDep ? Math.min(r.amt, free) : -Math.min(r.amt, g.saved);
     const before = g.saved;
     g.saved += n;
     (g.history = g.history || []).push({ date: todayStr(), amount: n });
+    markActive();
     save(); render();
-    if (isDep && before < g.target && g.saved >= g.target) toast('達成！');
-    else toast(isDep ? `+${yen(n)}` : `-${yen(-n)}`);
+    if (isDep && before < g.target && g.saved >= g.target) toast(`${g.name} 達成！`);
   });
 
   // ---------- 年間 ----------
@@ -1712,6 +1731,7 @@
   }
 
   applyRecurring();
+  save();
   setType('expense');
   showTab('jar');
   render();
