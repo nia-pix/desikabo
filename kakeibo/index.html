@@ -4,59 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="かわいい家計簿・貯金アプリ">
-<meta name="theme-color" content="#ffe4ec">
+<meta name="theme-color" content="#f3e6ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ぶたさん家計簿">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="pig.webp" as="image">
 <title>ぶたさん家計簿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #fff6f3;
-    --bg2: #ffeef3;
-    --card: #ffffff;
-    --text: #4a3b42;
-    --muted: #a08891;
-    --line: #f6dfe5;
-    --accent: #ff8fab;
-    --accent-dark: #e86a8b;
-    --accent-soft: #ffe4ec;
-    --mint: #7fd1b9;
-    --mint-soft: #e0f6ef;
-    --income: #5aa9e6;
-    --income-soft: #e3f1fc;
-    --expense: #ff7b7b;
-    --expense-soft: #ffe8e8;
-    --lemon: #ffd36e;
-    --lav: #b9a3f0;
-    --shadow: 0 6px 18px rgba(232, 106, 139, .10);
+    --bg: #f6efff;
+    --bg-a: #ffe3f3;
+    --bg-b: #e6e0ff;
+    --bg-c: #dff1ff;
+    --glass: rgba(255, 255, 255, .62);
+    --glass-strong: rgba(255, 255, 255, .82);
+    --glass-edge: rgba(255, 255, 255, .95);
+    --field: rgba(255, 255, 255, .7);
+    --text: #4b3a5c;
+    --muted: #9a88b0;
+    --line: rgba(190, 160, 230, .32);
+    --g1: #ff9fd6;
+    --g2: #b99cff;
+    --accent: #c86bd6;
+    --accent-soft: rgba(230, 170, 255, .28);
+    --mint: #7ee0c8;
+    --income: #6aa8ff;
+    --income-soft: rgba(130, 180, 255, .22);
+    --expense: #ff7aa8;
+    --expense-soft: rgba(255, 140, 180, .2);
+    --shadow: 0 10px 30px rgba(160, 110, 220, .18);
     --on-accent: #ffffff;
+    --tooltip: #4b3a5c;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #221a20;
-      --bg2: #2a2028;
-      --card: #30252e;
-      --text: #f7e9ee;
-      --muted: #b89dab;
-      --line: #463641;
-      --accent: #ff9fb9;
-      --accent-dark: #ffb9cb;
-      --accent-soft: #4a2c3a;
-      --mint: #8fe0c6;
-      --mint-soft: #22403a;
-      --income: #86c3f2;
-      --income-soft: #1f3445;
-      --expense: #ff9a9a;
-      --expense-soft: #4a2a2c;
-      --lemon: #ffdc8a;
-      --lav: #c8b6f5;
-      --shadow: none;
-      --on-accent: #3a1d29;
+      --bg: #1a1326;
+      --bg-a: #3a1d3c;
+      --bg-b: #26204a;
+      --bg-c: #182a40;
+      --glass: rgba(70, 50, 100, .45);
+      --glass-strong: rgba(80, 58, 112, .75);
+      --glass-edge: rgba(255, 255, 255, .14);
+      --field: rgba(30, 20, 45, .55);
+      --text: #f6eaff;
+      --muted: #b9a5d3;
+      --line: rgba(200, 170, 255, .18);
+      --accent: #f0a4ff;
+      --accent-soft: rgba(220, 150, 255, .18);
+      --income: #8fbfff;
+      --income-soft: rgba(130, 180, 255, .16);
+      --expense: #ff9cc0;
+      --expense-soft: rgba(255, 140, 180, .16);
+      --shadow: 0 10px 30px rgba(0, 0, 0, .3);
+      --on-accent: #ffffff;
+      --tooltip: #f6eaff;
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -64,8 +70,9 @@
   body {
     margin: 0;
     background:
-      radial-gradient(circle at 12% 0%, var(--bg2) 0, transparent 40%),
-      radial-gradient(circle at 100% 30%, var(--bg2) 0, transparent 35%),
+      radial-gradient(60vmax 60vmax at 0% 0%, var(--bg-a) 0, transparent 60%),
+      radial-gradient(55vmax 55vmax at 100% 25%, var(--bg-b) 0, transparent 60%),
+      radial-gradient(60vmax 60vmax at 30% 100%, var(--bg-c) 0, transparent 60%),
       var(--bg);
     background-attachment: fixed;
     color: var(--text);
@@ -73,11 +80,21 @@
     font-weight: 500;
     font-size: 15px;
     line-height: 1.55;
-    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
     min-height: 100vh;
+    overflow-x: hidden;
   }
+  /* きらきら */
+  .sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .sparkles i {
+    position: absolute; font-style: normal; color: #fff; opacity: .0;
+    text-shadow: 0 0 8px rgba(255, 180, 240, .9);
+    animation: twinkle 5s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.6) rotate(0); } 50% { opacity: .9; transform: scale(1) rotate(20deg); } }
+  header, main { position: relative; z-index: 1; }
   header {
-    padding: calc(14px + env(safe-area-inset-top)) 16px 10px;
+    padding: calc(12px + env(safe-area-inset-top)) 16px 8px;
     max-width: 720px;
     margin: 0 auto;
     display: flex;
@@ -85,168 +102,225 @@
     justify-content: space-between;
     gap: 8px;
   }
-  header h1 { font-size: 20px; margin: 0; font-weight: 900; display: flex; align-items: center; gap: 6px; letter-spacing: .02em; }
-  header h1 .pig { font-size: 26px; display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+  header h1 { font-size: 19px; margin: 0; font-weight: 900; display: flex; align-items: center; gap: 4px; letter-spacing: .03em; }
+  header h1 img { width: 40px; height: 40px; animation: bob 2.8s ease-in-out infinite; filter: drop-shadow(0 4px 6px rgba(180, 110, 220, .35)); }
+  .grad-text { background: linear-gradient(90deg, #e46fc0, #9a7cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  @media (prefers-color-scheme: dark) { .grad-text { background-image: linear-gradient(90deg, #ffb0e4, #c9b4ff); } }
   @keyframes bob { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-3px) rotate(4deg); } }
-  @media (prefers-reduced-motion: reduce) { header h1 .pig { animation: none; } }
-  .month-nav { display: flex; align-items: center; gap: 4px; background: var(--card); border-radius: 99px; padding: 4px; box-shadow: var(--shadow); border: 2px solid var(--line); }
-  .month-nav span { min-width: 88px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
-  .month-nav button { border: 0; background: var(--accent-soft); color: var(--accent-dark); width: 30px; height: 30px; padding: 0; border-radius: 50%; font-weight: 900; }
+  @keyframes jiggle { 0% { transform: scale(1); } 25% { transform: scale(1.12, .9); } 50% { transform: scale(.94, 1.08); } 75% { transform: scale(1.04, .97); } 100% { transform: scale(1); } }
+  .jiggle { animation: jiggle .6s ease !important; }
+  @media (prefers-reduced-motion: reduce) { header h1 img, .mascot img, .sparkles i { animation: none !important; } }
+  .month-nav {
+    display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 99px;
+    background: var(--glass); border: 1.5px solid var(--glass-edge);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow);
+  }
+  .month-nav span { min-width: 84px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
+  .month-nav button { border: 0; width: 30px; height: 30px; padding: 0; border-radius: 50%; font-weight: 900; box-shadow: none; }
   main { max-width: 720px; margin: 0 auto; padding: 0 16px; }
   .card {
-    background: var(--card);
-    border: 2px solid var(--line);
-    border-radius: 22px;
+    background: var(--glass);
+    border: 1.5px solid var(--glass-edge);
+    border-radius: 26px;
     padding: 16px 18px;
     margin-bottom: 14px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.6);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
   }
   .card h2 { font-size: 15px; margin: 0 0 12px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
   .card h2 .em { font-size: 18px; }
+  /* ヒーロー（ゼリー） */
   .hero {
-    background: linear-gradient(135deg, #ffb3c6 0%, #ffd6a5 100%);
-    border: 0;
-    color: #4a2734;
+    position: relative; overflow: hidden;
+    background: linear-gradient(140deg, rgba(255, 170, 220, .85), rgba(190, 160, 255, .85) 60%, rgba(160, 205, 255, .8));
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(120, 60, 160, .25);
+    border-color: rgba(255,255,255,.7);
   }
-  @media (prefers-color-scheme: dark) { .hero { background: linear-gradient(135deg, #7a3b55 0%, #7a5534 100%); color: #fff2f5; } }
-  .hero .label { font-size: 12px; opacity: .8; }
+  .hero::before {
+    content: ""; position: absolute; left: 8%; right: 30%; top: 6px; height: 34%;
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    background: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,0));
+    pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) { .hero { background: linear-gradient(140deg, rgba(170, 70, 140, .7), rgba(110, 80, 190, .7) 60%, rgba(60, 100, 170, .7)); } .hero::before { opacity: .35; } }
+  .hero .label { font-size: 12px; opacity: .92; }
   .hero .big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.2; }
-  .hero .sub { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-  .hero .sub > div { background: rgba(255,255,255,.55); border-radius: 14px; padding: 8px 12px; }
-  @media (prefers-color-scheme: dark) { .hero .sub > div { background: rgba(0,0,0,.2); } }
+  .hero .sub { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; position: relative; }
+  .hero .sub > div { background: rgba(255,255,255,.28); border: 1px solid rgba(255,255,255,.5); border-radius: 16px; padding: 8px 12px; }
   .hero .sub .v { font-weight: 900; font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hero-top { display: flex; align-items: center; gap: 10px; position: relative; }
+  .hero-top .grow { min-width: 0; }
+  .mascot { position: relative; flex: none; }
+  .mascot img { display: block; width: 104px; height: 104px; animation: bob 3.2s ease-in-out infinite; filter: drop-shadow(0 8px 10px rgba(120, 60, 180, .3)); cursor: pointer; }
+  .say {
+    position: relative; margin-top: 12px; padding: 10px 14px; border-radius: 18px;
+    background: rgba(255,255,255,.88); color: #6b4a86; text-shadow: none; font-size: 13px; font-weight: 700;
+  }
+  .say::before { content: ""; position: absolute; top: -8px; right: 46px; border: 8px solid transparent; border-top: 0; border-bottom-color: rgba(255,255,255,.88); }
+  @media (prefers-color-scheme: dark) { .say { background: rgba(40, 25, 60, .7); color: #f3dcff; } .say::before { border-bottom-color: rgba(40, 25, 60, .7); } }
+  #pigSay2::before { right: auto; left: 52px; }
   .income { color: var(--income); }
   .expense { color: var(--expense); }
   .hero .income, .hero .expense { color: inherit; }
-  .bar { height: 14px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; position: relative; }
-  .bar > div { height: 100%; background: linear-gradient(90deg, var(--mint), #a8e6cf); border-radius: 99px; transition: width .4s cubic-bezier(.3,1.4,.6,1); min-width: 0; }
-  .bar.pink > div { background: linear-gradient(90deg, var(--accent), #ffc2d1); }
-  .bar.over > div { background: repeating-linear-gradient(45deg, var(--expense), var(--expense) 6px, #ff9e9e 6px, #ff9e9e 12px); }
-  .bar.thin { height: 8px; }
+  /* ゼリーのバー */
+  .bar { height: 16px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(150, 100, 200, .15); }
+  .bar > div {
+    height: 100%; border-radius: 99px; transition: width .5s cubic-bezier(.3,1.4,.6,1); position: relative;
+    background: linear-gradient(90deg, #8ee6d0, #9fd2ff);
+    box-shadow: inset 0 -3px 4px rgba(0,0,0,.06);
+  }
+  .bar > div::after { content: ""; position: absolute; left: 6px; right: 6px; top: 3px; height: 30%; border-radius: 99px; background: rgba(255,255,255,.6); }
+  .bar.pink > div { background: linear-gradient(90deg, var(--g1), var(--g2)); }
+  .bar.over > div { background: repeating-linear-gradient(45deg, #ff7aa8, #ff7aa8 6px, #ffa6c6 6px, #ffa6c6 12px); }
+  .bar.thin { height: 9px; }
+  .bar.thin > div::after { display: none; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .small { font-size: 12px; color: var(--muted); }
+  /* ボタン */
   button {
-    font: inherit;
-    font-weight: 700;
-    border: 2px solid var(--line);
-    background: var(--card);
+    font: inherit; font-weight: 700;
+    border: 1.5px solid var(--glass-edge);
+    background: var(--glass-strong);
     color: var(--text);
     border-radius: 99px;
     padding: 8px 16px;
     cursor: pointer;
-    transition: transform .1s;
+    transition: transform .12s, box-shadow .12s;
+    box-shadow: 0 2px 8px rgba(160, 110, 220, .12);
   }
-  button:active { transform: scale(.95); }
-  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); box-shadow: 0 3px 0 var(--accent-dark); }
-  button.primary:active { box-shadow: none; transform: translateY(3px); }
-  button.mint { background: var(--mint-soft); border-color: var(--mint-soft); color: var(--text); }
-  button.icon { padding: 4px 10px; font-size: 13px; }
+  button:active { transform: scale(.94); }
+  button.primary {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    border-color: rgba(255,255,255,.7);
+    color: var(--on-accent);
+    text-shadow: 0 1px 2px rgba(120, 50, 160, .3);
+    box-shadow: 0 6px 16px rgba(200, 110, 220, .38), inset 0 -3px 6px rgba(120, 60, 180, .2);
+  }
+  button.primary::after { content: ""; position: absolute; left: 12%; right: 12%; top: 2px; height: 40%; border-radius: 99px; background: rgba(255,255,255,.45); pointer-events: none; }
+  button.mint { background: linear-gradient(135deg, #a8f0dc, #a9d8ff); border-color: rgba(255,255,255,.7); color: #2f5a63; }
+  button.icon { padding: 5px 12px; font-size: 13px; }
   button.danger { color: var(--expense); }
-  button.ghost { border-color: transparent; background: transparent; }
-  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button.ghost { border-color: transparent; background: transparent; box-shadow: none; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--g2); outline-offset: 2px; }
   form.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   form.grid .full, .full { grid-column: 1 / -1; }
   label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 700; }
-  label.check { flex-direction: row; align-items: center; gap: 8px; }
-  label.check input { width: auto; }
   input, select {
-    font: inherit;
-    color: var(--text);
-    background: var(--bg);
-    border: 2px solid var(--line);
-    border-radius: 14px;
+    font: inherit; color: var(--text);
+    background: var(--field);
+    border: 1.5px solid var(--glass-edge);
+    border-radius: 16px;
     padding: 9px 12px;
-    width: 100%;
-    min-width: 0;
+    width: 100%; min-width: 0;
+    box-shadow: inset 0 2px 5px rgba(150, 100, 200, .1);
   }
   input.amount-input { font-size: 26px; font-weight: 900; text-align: right; padding: 8px 14px; }
-  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 99px; padding: 4px; gap: 4px; border: 2px solid var(--line); }
-  .seg button { border: 0; background: transparent; padding: 8px; }
-  .seg button.on[data-type="expense"] { background: var(--expense); color: #fff; }
-  .seg button.on[data-type="income"] { background: var(--income); color: #fff; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--field); border-radius: 99px; padding: 4px; gap: 4px; border: 1.5px solid var(--glass-edge); }
+  .seg button { border: 0; background: transparent; padding: 8px; box-shadow: none; }
+  .seg button.on[data-type="expense"] { background: linear-gradient(135deg, #ff9fc4, #ff7aa8); color: #fff; box-shadow: 0 4px 10px rgba(255, 120, 170, .35); }
+  .seg button.on[data-type="income"] { background: linear-gradient(135deg, #9fc6ff, #8a9cff); color: #fff; box-shadow: 0 4px 10px rgba(120, 150, 255, .35); }
   .catpick { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
   .catpick button {
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    border-radius: 16px; padding: 8px 4px; font-size: 11px; font-weight: 700;
-    background: var(--bg); border-color: transparent; color: var(--text); line-height: 1.2;
+    border-radius: 18px; padding: 8px 4px; font-size: 11px; font-weight: 700; line-height: 1.2;
+    background: var(--field); border-color: transparent; box-shadow: none; color: var(--text);
   }
   .catpick button .e { font-size: 22px; }
-  .catpick button.on { border-color: var(--accent); background: var(--accent-soft); }
+  .catpick button.on { border-color: var(--g2); background: var(--accent-soft); box-shadow: 0 4px 12px rgba(185, 156, 255, .35); }
   ul.list { list-style: none; margin: 0; padding: 0; }
-  ul.list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 2px dotted var(--line); }
+  ul.list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1.5px dashed var(--line); }
   ul.list li:first-child { border-top: 0; }
-  .bubble { width: 38px; height: 38px; border-radius: 14px; flex: none; display: grid; place-items: center; font-size: 20px; }
+  .bubble {
+    width: 38px; height: 38px; border-radius: 14px; flex: none; display: grid; place-items: center; font-size: 20px;
+    box-shadow: inset 0 -3px 5px rgba(0,0,0,.05), inset 0 3px 4px rgba(255,255,255,.6);
+  }
   .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; display: inline-block; }
   .grow { flex: 1; min-width: 0; }
   .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .amount { font-variant-numeric: tabular-nums; font-weight: 900; white-space: nowrap; }
   .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+  .empty img { width: 72px; height: 72px; display: block; margin: 0 auto 6px; opacity: .9; }
   .empty .e { font-size: 34px; display: block; margin-bottom: 4px; }
   .donut-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
-  .donut-wrap svg { flex: none; }
+  .donut-wrap svg { flex: none; overflow: visible; }
   .legend { flex: 1; min-width: 200px; }
   .legend li { padding: 6px 0 !important; }
   nav.tabs {
     position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     width: min(520px, calc(100% - 20px));
-    background: var(--card);
-    border: 2px solid var(--line);
-    border-radius: 26px;
+    background: var(--glass-strong);
+    border: 1.5px solid var(--glass-edge);
+    border-radius: 28px;
     display: grid; grid-template-columns: repeat(5, 1fr);
     padding: 6px;
     z-index: 5;
-    box-shadow: 0 8px 24px rgba(232, 106, 139, .18);
+    box-shadow: 0 10px 30px rgba(160, 110, 220, .25);
+    backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
   }
-  nav.tabs button { border: 0; background: transparent; padding: 6px 2px; color: var(--muted); font-size: 11px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; gap: 0; }
-  nav.tabs button .e { font-size: 20px; line-height: 1.2; filter: grayscale(.7); opacity: .7; transition: .2s; }
-  nav.tabs button.on { color: var(--accent-dark); background: var(--accent-soft); }
-  nav.tabs button.on .e { filter: none; opacity: 1; transform: scale(1.1); }
+  nav.tabs button { border: 0; background: transparent; box-shadow: none; padding: 6px 2px; color: var(--muted); font-size: 11px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 0; }
+  nav.tabs button .e { font-size: 20px; line-height: 1.2; filter: grayscale(.6); opacity: .7; transition: .2s; }
+  nav.tabs button.on { color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 2px 4px rgba(255,255,255,.5); }
+  nav.tabs button.on .e { filter: none; opacity: 1; transform: scale(1.12); }
   section[hidden] { display: none; }
-  .goal { padding: 14px 0; border-top: 2px dotted var(--line); }
+  .goal { padding: 14px 0; border-top: 1.5px dashed var(--line); }
   .goal:first-child { border-top: 0; padding-top: 4px; }
   .actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { font-size: 13px; padding: 4px 12px; border-radius: 99px; border: 2px solid var(--line); background: var(--bg); }
-  .tag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--lav); color: #fff; font-weight: 700; vertical-align: 1px; }
+  .chip { font-size: 13px; padding: 4px 12px; }
+  .tag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: linear-gradient(135deg, var(--g1), var(--g2)); color: #fff; font-weight: 700; vertical-align: 1px; }
   svg text { font-family: inherit; }
   .bars svg text { fill: var(--muted); font-size: 11px; font-weight: 700; }
   .toast {
-    position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px);
-    background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 99px;
+    position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px);
+    background: linear-gradient(135deg, rgba(255, 150, 210, .95), rgba(170, 140, 255, .95)); color: #fff;
+    padding: 10px 18px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.7);
     font-size: 13px; font-weight: 700; opacity: 0; transition: .25s; pointer-events: none; z-index: 20; white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(170, 110, 220, .35);
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   dialog {
-    border: 0; border-radius: 24px; padding: 20px; width: min(420px, calc(100% - 32px));
-    background: var(--card); color: var(--text); box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    border: 1.5px solid var(--glass-edge); border-radius: 28px; padding: 20px; width: min(420px, calc(100% - 32px));
+    background: var(--glass-strong); color: var(--text); box-shadow: 0 20px 50px rgba(120, 60, 180, .3);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
   }
-  dialog::backdrop { background: rgba(74, 39, 52, .35); backdrop-filter: blur(2px); }
+  dialog::backdrop { background: rgba(90, 50, 130, .25); backdrop-filter: blur(3px); }
   dialog h3 { margin: 0 0 14px; font-size: 17px; font-weight: 900; }
   dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
   .assets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .asset {
-    border-radius: 18px; padding: 12px 14px; background: var(--bg); border: 2px solid var(--line);
+    border-radius: 20px; padding: 12px 14px; background: var(--field); border: 1.5px solid var(--glass-edge);
     text-align: left; display: flex; flex-direction: column; gap: 2px; font-weight: 500; color: var(--text);
   }
   .asset .e { font-size: 22px; }
   .asset .n { font-size: 13px; font-weight: 700; }
   .asset .v { font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
-  .asset.add { align-items: center; justify-content: center; border-style: dashed; color: var(--muted); min-height: 96px; }
+  .asset.add { align-items: center; justify-content: center; border-style: dashed; border-color: var(--g2); color: var(--muted); min-height: 96px; background: transparent; box-shadow: none; }
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .kpi { background: var(--bg); border-radius: 16px; padding: 10px; text-align: center; }
+  .kpi { background: var(--field); border: 1.5px solid var(--glass-edge); border-radius: 18px; padding: 10px; text-align: center; }
   .kpi .v { font-weight: 900; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* 貯金ぶた */
+  .piggy { display: flex; align-items: center; gap: 14px; }
+  .piggy .jar { position: relative; width: 120px; height: 120px; flex: none; }
+  .piggy .jar img { width: 100%; height: 100%; position: relative; z-index: 1; filter: drop-shadow(0 8px 12px rgba(150, 90, 210, .3)); cursor: pointer; }
+  .piggy .ring { position: absolute; inset: -8px; z-index: 0; }
+  .piggy .big { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.2; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
-    .hero .big { font-size: 26px; }
+    .hero .big { font-size: 25px; }
     .hero .sub .v { font-size: 15px; }
+    .mascot img { width: 88px; height: 88px; }
     .kpi .v { font-size: 14px; }
   }
 </style>
 </head>
 <body>
+<div class="sparkles" id="sparkles" aria-hidden="true"></div>
 <header>
-  <h1><span class="pig" aria-hidden="true">🐷</span>ぶたさん家計簿</h1>
+  <h1><img src="pig.webp" alt="" width="40" height="40"><span class="grad-text">ぶたさん家計簿</span></h1>
   <div class="month-nav">
     <button id="prevMonth" aria-label="前へ">‹</button>
     <span id="monthLabel"></span>
@@ -258,8 +332,14 @@
   <!-- ホーム -->
   <section id="tab-home">
     <div class="card hero">
-      <div class="label">今月の収支</div>
-      <div class="big" id="sumBalance"></div>
+      <div class="hero-top">
+        <div class="grow">
+          <div class="label">今月の収支</div>
+          <div class="big" id="sumBalance"></div>
+        </div>
+        <div class="mascot"><img src="pig.webp" alt="ぶたさん" id="heroPig" width="104" height="104"></div>
+      </div>
+      <div class="say" id="pigSay"></div>
       <div class="sub">
         <div><div class="label">💰 収入</div><div class="v" id="sumIncome"></div></div>
         <div><div class="label">🛍️ 支出</div><div class="v" id="sumExpense"></div></div>
@@ -334,6 +414,25 @@
 
   <!-- お金（貯金・資産） -->
   <section id="tab-savings" hidden>
+    <div class="card hero">
+      <div class="piggy">
+        <div class="jar">
+          <svg class="ring" viewBox="0 0 136 136" aria-hidden="true">
+            <defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffe6fb"/></linearGradient></defs>
+            <circle cx="68" cy="68" r="62" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="7"/>
+            <circle id="ringArc" cx="68" cy="68" r="62" fill="none" stroke="url(#ringG)" stroke-width="7" stroke-linecap="round" transform="rotate(-90 68 68)" stroke-dasharray="0 999"/>
+          </svg>
+          <img src="pig.webp" alt="貯金ぶた" id="bigPig" width="120" height="120">
+        </div>
+        <div class="grow">
+          <div class="label">ぜんぶのお金</div>
+          <div class="big" id="pigTotal"></div>
+          <div class="label" id="pigGoalPct" style="margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="say" id="pigSay2"></div>
+    </div>
+
     <div class="card">
       <h2><span class="em">🏦</span>動かさないお金</h2>
       <p class="small" style="margin-top:-6px">定期預金・積立・投資・へそくりなど、ふだん使わないお金の残高をメモしておけます。</p>
@@ -529,6 +628,46 @@
   const monthTx = (y = viewY, m = viewM) => { const k = monthKey(y, m); return state.tx.filter(t => t.date.startsWith(k)); };
   const sums = list => list.reduce((a, t) => { a[t.type] += t.amount; return a; }, { income: 0, expense: 0 });
 
+  // ---------- ぶたさん ----------
+  function jiggle(el) {
+    if (!el) return;
+    el.classList.remove('jiggle'); void el.offsetWidth; el.classList.add('jiggle');
+    setTimeout(() => el.classList.remove('jiggle'), 650);
+  }
+  const TAPS = ['ぷにっ', 'ちょきんしよ〜', 'きらきら✨', 'がんばってるね！', 'おなかいっぱい…？', 'ぶひっ♪'];
+  ['#heroPig', '#bigPig'].forEach(sel => $(sel).addEventListener('click', e => {
+    jiggle(e.currentTarget);
+    toast(TAPS[Math.floor(Math.random() * TAPS.length)]);
+  }));
+  (function sparkles() {
+    const box = $('#sparkles'), marks = ['✦', '✧', '⋆', '✦', '♡'];
+    for (let i = 0; i < 14; i++) {
+      const el = document.createElement('i');
+      el.textContent = marks[i % marks.length];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.top = Math.random() * 100 + '%';
+      el.style.fontSize = 8 + Math.random() * 12 + 'px';
+      el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+      el.style.animationDuration = (4 + Math.random() * 4).toFixed(2) + 's';
+      box.appendChild(el);
+    }
+  })();
+  function homeMessage(s, list) {
+    const isNow = viewY === now.getFullYear() && viewM === now.getMonth();
+    if (!list.length) return isNow ? '今月もいっしょにがんばろうね！まずは記録からだよ ✏️' : 'この月の記録はないみたい';
+    if (state.budget > 0) {
+      const pct = Math.round(s.expense / state.budget * 100), remain = state.budget - s.expense;
+      if (remain < 0) return `予算を ${yen(-remain)} オーバーしちゃった…来月いっしょにがんばろ 🥺`;
+      if (pct >= 85) return `あと ${yen(remain)} で予算いっぱい！ちょっとだけ気をつけよ 💦`;
+      if (pct >= 50) return `予算の ${pct}% を使ったよ。いいペース！`;
+      return `予算の ${pct}% だけ！とってもいい感じ ✨`;
+    }
+    const bal = s.income - s.expense;
+    if (bal > 0) return `今月は ${yen(bal)} のプラス！えらいね 💕`;
+    if (s.income === 0) return '支出だけ記録されてるよ。収入も記録してみよう 💰';
+    return `今月は ${yen(-bal)} のマイナス…でも記録できてえらい！`;
+  }
+
   // ---------- 固定費の自動記録 ----------
   function applyRecurring() {
     const t = new Date(), curY = t.getFullYear(), curM = t.getMonth(), curKey = monthKey(curY, curM);
@@ -625,6 +764,7 @@
     $('#sumIncome').textContent = yen(s.income);
     $('#sumExpense').textContent = yen(s.expense);
     $('#sumBalance').textContent = (bal > 0 ? '+' : '') + yen(bal);
+    $('#pigSay').textContent = homeMessage(s, list);
 
     const byCat = {};
     list.filter(t => t.type === 'expense').forEach(t => byCat[t.category] = (byCat[t.category] || 0) + t.amount);
@@ -656,7 +796,7 @@
     const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
     const donut = $('#donut');
     if (!entries.length) {
-      donut.innerHTML = '<div class="empty"><span class="e">🌸</span>この月の支出はまだないよ</div>';
+      donut.innerHTML = '<div class="empty"><img src="pig.webp" alt="">この月の支出はまだないよ</div>';
     } else {
       const total = s.expense, R = 66, r = 42, C = 2 * Math.PI, cx = 75;
       let a0 = -Math.PI / 2, paths = '';
@@ -673,8 +813,8 @@
       });
       donut.innerHTML = `<div class="donut-wrap">
         <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="カテゴリ別支出">${paths}
-          <text x="${cx}" y="${cx - 4}" text-anchor="middle" font-size="22">🐷</text>
-          <text x="${cx}" y="${cx + 18}" text-anchor="middle" font-size="13" font-weight="900" fill="var(--text)">${yenShort(total)}円</text>
+          <image href="pig.webp" x="${cx - 22}" y="${cx - 34}" width="44" height="44"/>
+          <text x="${cx}" y="${cx + 24}" text-anchor="middle" font-size="13" font-weight="900" fill="var(--text)">${yenShort(total)}円</text>
         </svg>
         <ul class="list legend">${entries.map(([cat, v]) => `
           <li><span class="bubble" style="background:${soft(catColor(cat))};width:30px;height:30px;font-size:16px;border-radius:10px">${icon(cat)}</span>
@@ -748,6 +888,7 @@
     const [y, m] = data.date.split('-').map(Number);
     viewY = y; viewM = m - 1;
     resetForm(); render();
+    jiggle($('header h1 img'));
   });
   $('#txCancel').addEventListener('click', resetForm);
 
@@ -840,9 +981,26 @@
     save(); render(); toast('目標を作ったよ 🎯');
   });
 
+  function renderPiggy() {
+    const g = state.goals.reduce((a, x) => a + x.saved, 0), as = state.assets.reduce((a, x) => a + x.amount, 0);
+    const tgt = state.goals.reduce((a, x) => a + x.target, 0);
+    const pct = tgt ? Math.min(1, g / tgt) : 0;
+    $('#pigTotal').textContent = yen(g + as);
+    $('#pigGoalPct').textContent = tgt ? `貯金目標の達成 ${Math.floor(pct * 100)}%（${yen(g)} / ${yen(tgt)}）` : '貯金目標を作ると、まわりの輪っかがたまっていくよ';
+    const C = 2 * Math.PI * 62;
+    $('#ringArc').setAttribute('stroke-dasharray', `${(C * pct).toFixed(1)} ${C.toFixed(1)}`);
+    const done = state.goals.filter(x => x.saved >= x.target).length;
+    $('#pigSay2').textContent =
+      !state.goals.length && !state.assets.length ? 'ここにお金をためていこうね！下から目標や口座を追加してみて 🐷'
+      : done && done === state.goals.length ? 'ぜんぶの目標を達成！ほんとにすごい…！🎉'
+      : pct >= .75 ? 'ゴールはもうすぐ！あとひといき ✨'
+      : pct >= .3 ? 'おなかがだんだん重くなってきた〜 💕'
+      : state.goals.length ? 'ちょっとずつでも、いっしょにためよう！' : `動かさないお金が ${yen(as)} あるよ。目標も作ってみる？`;
+  }
   function renderGoals() {
+    renderPiggy();
     const box = $('#goalList');
-    if (!state.goals.length) { box.innerHTML = '<div class="empty"><span class="e">🐷</span>まだ目標がないよ。「目標を作る」から始めよう</div>'; return; }
+    if (!state.goals.length) { box.innerHTML = '<div class="empty"><img src="pig.webp" alt="">まだ目標がないよ。「目標を作る」から始めよう</div>'; renderPiggy(); return; }
     box.innerHTML = state.goals.map(g => {
       const pct = Math.min(100, g.saved / g.target * 100);
       const remain = Math.max(0, g.target - g.saved);
@@ -888,6 +1046,7 @@
     g.saved += n;
     (g.history = g.history || []).push({ date: todayStr(), amount: n });
     save(); render();
+    if (isDep) jiggle($('#bigPig'));
     if (isDep && before < g.target && g.saved >= g.target) toast(`🎉「${g.name}」達成！すごい！`);
     else toast(isDep ? `🐷 ${yen(n)} ちょきん！` : `${yen(-n)} 引き出しました`);
   });
