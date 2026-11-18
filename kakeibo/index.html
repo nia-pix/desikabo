@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="かわいい家計簿・貯金アプリ">
 <meta name="theme-color" content="#f3e6ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,6 +68,8 @@
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body, button, a, input, select, textarea, label, [role="button"] { touch-action: manipulation; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html { background: var(--bg); }
   body {
     margin: 0;
@@ -206,6 +208,8 @@
   form.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   form.grid .full, .full { grid-column: 1 / -1; }
   label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 700; }
+  input, select, textarea { font-size: 16px !important; }
+  input.amount-input { font-size: 26px !important; }
   input, select {
     font: inherit; color: var(--text);
     background: var(--field);
@@ -403,7 +407,7 @@
   .free b { font-size: 18px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
   .free.over b { color: var(--expense); }
   .free[hidden] { display: none; }
-  #dlgBody textarea { font: 12px/1.4 ui-monospace, monospace; width: 100%; height: 150px; resize: vertical; color: var(--text); background: var(--field); border: 1.5px solid var(--glass-edge); border-radius: 14px; padding: 10px; }
+  #dlgBody textarea { font-family: ui-monospace, monospace; line-height: 1.4; width: 100%; height: 150px; resize: vertical; color: var(--text); background: var(--field); border: 1.5px solid var(--glass-edge); border-radius: 14px; padding: 10px; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
