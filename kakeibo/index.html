@@ -11,6 +11,7 @@
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" href="pig.webp" as="image">
+<link rel="preload" href="pig-sad.webp" as="image">
 <title>ぶたさん家計簿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -634,10 +635,21 @@
     el.classList.remove('jiggle'); void el.offsetWidth; el.classList.add('jiggle');
     setTimeout(() => el.classList.remove('jiggle'), 650);
   }
+  const PIG = { happy: 'pig.webp', sad: 'pig-sad.webp' };
+  function setPig(el, mood) {
+    const src = PIG[mood];
+    if (el.getAttribute('src') === src) return;
+    el.setAttribute('src', src);
+    el.dataset.mood = mood;
+    jiggle(el);
+  }
+  let pigSadUntil = 0;
+  const TAPS_SAD = ['しくしく…', 'おなかすいた…', 'からっぽだよ〜', 'ちょきんしてくれる…？'];
   const TAPS = ['ぷにっ', 'ちょきんしよ〜', 'きらきら✨', 'がんばってるね！', 'おなかいっぱい…？', 'ぶひっ♪'];
   ['#heroPig', '#bigPig'].forEach(sel => $(sel).addEventListener('click', e => {
     jiggle(e.currentTarget);
-    toast(TAPS[Math.floor(Math.random() * TAPS.length)]);
+    const list = e.currentTarget.dataset.mood === 'sad' ? TAPS_SAD : TAPS;
+    toast(list[Math.floor(Math.random() * list.length)]);
   }));
   (function sparkles() {
     const box = $('#sparkles'), marks = ['✦', '✧', '⋆', '✦', '♡'];
@@ -654,18 +666,19 @@
   })();
   function homeMessage(s, list) {
     const isNow = viewY === now.getFullYear() && viewM === now.getMonth();
-    if (!list.length) return isNow ? '今月もいっしょにがんばろうね！まずは記録からだよ ✏️' : 'この月の記録はないみたい';
+    const say = (text, sad = false) => ({ text, sad });
+    if (!list.length) return say(isNow ? '今月もいっしょにがんばろうね！まずは記録からだよ ✏️' : 'この月の記録はないみたい');
     if (state.budget > 0) {
       const pct = Math.round(s.expense / state.budget * 100), remain = state.budget - s.expense;
-      if (remain < 0) return `予算を ${yen(-remain)} オーバーしちゃった…来月いっしょにがんばろ 🥺`;
-      if (pct >= 85) return `あと ${yen(remain)} で予算いっぱい！ちょっとだけ気をつけよ 💦`;
-      if (pct >= 50) return `予算の ${pct}% を使ったよ。いいペース！`;
-      return `予算の ${pct}% だけ！とってもいい感じ ✨`;
+      if (remain < 0) return say(`予算を ${yen(-remain)} オーバーしちゃった…しくしく。来月いっしょにがんばろ`, true);
+      if (pct >= 85) return say(`あと ${yen(remain)} で予算いっぱい…ちょっとこわいよ〜 💦`, true);
+      if (pct >= 50) return say(`予算の ${pct}% を使ったよ。いいペース！`);
+      return say(`予算の ${pct}% だけ！とってもいい感じ ✨`);
     }
     const bal = s.income - s.expense;
-    if (bal > 0) return `今月は ${yen(bal)} のプラス！えらいね 💕`;
-    if (s.income === 0) return '支出だけ記録されてるよ。収入も記録してみよう 💰';
-    return `今月は ${yen(-bal)} のマイナス…でも記録できてえらい！`;
+    if (bal > 0) return say(`今月は ${yen(bal)} のプラス！えらいね 💕`);
+    if (s.income === 0) return say('支出だけ記録されてるよ。収入も記録してみよう 💰');
+    return say(`今月は ${yen(-bal)} のマイナス…しょんぼり。でも記録できてえらい！`, true);
   }
 
   // ---------- 固定費の自動記録 ----------
@@ -764,7 +777,9 @@
     $('#sumIncome').textContent = yen(s.income);
     $('#sumExpense').textContent = yen(s.expense);
     $('#sumBalance').textContent = (bal > 0 ? '+' : '') + yen(bal);
-    $('#pigSay').textContent = homeMessage(s, list);
+    const msg = homeMessage(s, list);
+    $('#pigSay').textContent = msg.text;
+    setPig($('#heroPig'), msg.sad ? 'sad' : 'happy');
 
     const byCat = {};
     list.filter(t => t.type === 'expense').forEach(t => byCat[t.category] = (byCat[t.category] || 0) + t.amount);
@@ -813,7 +828,7 @@
       });
       donut.innerHTML = `<div class="donut-wrap">
         <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="カテゴリ別支出">${paths}
-          <image href="pig.webp" x="${cx - 22}" y="${cx - 34}" width="44" height="44"/>
+          <image href="${msg.sad ? PIG.sad : PIG.happy}" x="${cx - 22}" y="${cx - 34}" width="44" height="44"/>
           <text x="${cx}" y="${cx + 24}" text-anchor="middle" font-size="13" font-weight="900" fill="var(--text)">${yenShort(total)}円</text>
         </svg>
         <ul class="list legend">${entries.map(([cat, v]) => `
@@ -990,8 +1005,12 @@
     const C = 2 * Math.PI * 62;
     $('#ringArc').setAttribute('stroke-dasharray', `${(C * pct).toFixed(1)} ${C.toFixed(1)}`);
     const done = state.goals.filter(x => x.saved >= x.target).length;
+    const empty = g + as === 0, justWithdrew = Date.now() < pigSadUntil;
+    setPig($('#bigPig'), empty || justWithdrew ? 'sad' : 'happy');
     $('#pigSay2').textContent =
-      !state.goals.length && !state.assets.length ? 'ここにお金をためていこうね！下から目標や口座を追加してみて 🐷'
+      justWithdrew ? 'あっ…おなかが軽くなっちゃった…また入れてね 🥺'
+      : !state.goals.length && !state.assets.length ? 'おなかがからっぽ…しくしく。下から目標や口座を追加して、ためていこうね'
+      : empty ? '目標はできたけど、まだからっぽ…「入金」してくれるとうれしいな 🥺'
       : done && done === state.goals.length ? 'ぜんぶの目標を達成！ほんとにすごい…！🎉'
       : pct >= .75 ? 'ゴールはもうすぐ！あとひといき ✨'
       : pct >= .3 ? 'おなかがだんだん重くなってきた〜 💕'
@@ -1000,7 +1019,7 @@
   function renderGoals() {
     renderPiggy();
     const box = $('#goalList');
-    if (!state.goals.length) { box.innerHTML = '<div class="empty"><img src="pig.webp" alt="">まだ目標がないよ。「目標を作る」から始めよう</div>'; renderPiggy(); return; }
+    if (!state.goals.length) { box.innerHTML = '<div class="empty"><img src="pig-sad.webp" alt="">まだ目標がないよ。「目標を作る」から始めよう</div>'; renderPiggy(); return; }
     box.innerHTML = state.goals.map(g => {
       const pct = Math.min(100, g.saved / g.target * 100);
       const remain = Math.max(0, g.target - g.saved);
@@ -1042,6 +1061,7 @@
     ], isDep ? '入金' : '引き出す');
     if (!r || !(r.amt > 0)) return;
     const n = isDep ? r.amt : -Math.min(r.amt, g.saved);
+    if (!isDep) { pigSadUntil = Date.now() + 4000; setTimeout(renderPiggy, 4100); }
     const before = g.saved;
     g.saved += n;
     (g.history = g.history || []).push({ date: todayStr(), amount: n });
