@@ -1,6 +1,6 @@
 // オフラインでも開けるようにするサービスワーカー
-const CACHE = 'kakeibo-v4';
-const FILES = ['./', './index.html', './manifest.webmanifest', './pig.webp', './pig-sad.webp', './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
+const CACHE = 'kakeibo-v5';
+const FILES = ['./', './index.html', './manifest.webmanifest', './pig.webp', './pig-sad.webp', './pig-empty.webp', './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
