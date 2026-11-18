@@ -403,6 +403,7 @@
   .free b { font-size: 18px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
   .free.over b { color: var(--expense); }
   .free[hidden] { display: none; }
+  #dlgBody textarea { font: 12px/1.4 ui-monospace, monospace; width: 100%; height: 150px; resize: vertical; color: var(--text); background: var(--field); border: 1.5px solid var(--glass-edge); border-radius: 14px; padding: 10px; }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
@@ -691,6 +692,11 @@
         <button id="exportJson">バックアップ</button>
         <button id="importJson">復元</button>
         <button id="resetAll" class="danger">全削除</button>
+      </div>
+      <div class="small" style="font-weight:700;margin:14px 0 6px">ほかの端末・アプリへ引き継ぎ</div>
+      <div class="chips">
+        <button id="copyData">データをコピー</button>
+        <button id="pasteData">貼り付けて復元</button>
       </div>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
@@ -1765,6 +1771,43 @@
     } catch { toast('ファイルを読み込めませんでした'); }
     finally { e.target.value = ''; }
   });
+  // 引き継ぎ（コピー＆貼り付け：ファイルが使えない環境でも使える）
+  function textDialog(title, value, okLabel, note) {
+    const dlg = $('#dlg');
+    $('#dlgTitle').textContent = title;
+    $('#dlgOk').textContent = okLabel;
+    $('#dlgBody').innerHTML = `${note ? `<div class="small">${esc(note)}</div>` : ''}<textarea id="f_text" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>`;
+    const ta = $('#f_text'); ta.value = value || '';
+    return new Promise(resolve => {
+      dlg.onclose = () => resolve(dlg.returnValue === 'ok' ? ta.value : null);
+      dlg.returnValue = '';
+      dlg.showModal();
+      if (value) { ta.focus(); ta.select(); } else ta.focus();
+    });
+  }
+  $('#copyData').addEventListener('click', async () => {
+    const text = 'KAKEIBO1:' + JSON.stringify(state);
+    let copied = false;
+    try { await navigator.clipboard.writeText(text); copied = true; } catch (e) {}
+    if (!copied) { try { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); copied = document.execCommand('copy'); t.remove(); } catch (e) {} }
+    if (copied) { toast('コピーしました'); return; }
+    // コピーできない環境：表示して長押しでコピーしてもらう
+    await textDialog('データをコピー', text, '閉じる', '下の文字を長押し →「すべてを選択」→「コピー」');
+  });
+  $('#pasteData').addEventListener('click', async () => {
+    let pre = '';
+    try { pre = await navigator.clipboard.readText(); } catch (e) {}
+    if (!pre.startsWith('KAKEIBO1:')) pre = '';
+    const text = await textDialog('貼り付けて復元', pre, '復元', pre ? '' : 'コピーしたデータを長押しで貼り付け');
+    if (text === null) return;
+    try {
+      const d = JSON.parse(text.trim().replace(/^KAKEIBO1:/, ''));
+      if (!Array.isArray(d.tx) || !Array.isArray(d.goals)) throw new Error();
+      if (!(await confirmAsk('今のデータを置き換えますか？', '復元'))) return;
+      state = normalize(d); applyRecurring(); save(); render(); toast('復元しました');
+    } catch { toast('データを読み込めませんでした'); }
+  });
+
   $('#resetAll').addEventListener('click', async () => {
     if (!(await confirmAsk('すべて削除しますか？元に戻せません'))) return;
     state = DEFAULT(); save(); render(); toast('削除しました');
