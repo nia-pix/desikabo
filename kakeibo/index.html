@@ -573,6 +573,7 @@
         </label>
         <label class="full" id="payWrap"><span id="payLabel">支払い</span>
           <select id="txPay"></select>
+          <button type="button" class="icon" id="payHint" hidden style="justify-self:start;width:max-content">＋ 口座を登録すると残高から引かれます</button>
         </label>
         <div class="full row" style="justify-content:flex-end">
           <button type="button" id="txCancel" hidden>キャンセル</button>
@@ -926,11 +927,18 @@
       if (c) c.due = (c.due || 0) + sign * t.amount;
     }
   }
+  // 口座・カードを先に並べ、「引かない」は最後に
   function payOptions(type) {
-    const opts = [['', type === 'income' ? '指定なし' : '現金・その他']];
+    const opts = [];
     state.accounts.forEach(a => opts.push(['acc:' + a.id, a.name]));
     if (type === 'expense') state.cards.forEach(c => opts.push(['card:' + c.id, c.name]));
+    opts.push(['', '記録だけ（残高は変えない）']);
     return opts;
+  }
+  // いつもの支払い方法：前回選んだ口座・カード、なければ先頭（口座）
+  function defaultPay(type) {
+    const opts = payOptions(type), last = state.lastPay?.[type];
+    return last && opts.some(([k]) => k === last) ? last : opts[0][0];
   }
   const payName = pay => {
     if (!pay) return '';
@@ -1173,9 +1181,11 @@
   });
   function renderPay(value) {
     const opts = payOptions(txType);
-    $('#payWrap').hidden = opts.length <= 1;
+    $('#payWrap').hidden = false;
     $('#payLabel').textContent = txType === 'income' ? '入金先' : '支払い';
-    const v = value ?? (state.lastPay?.[txType] || '');
+    $('#payHint').hidden = opts.length > 1;
+    $('#txPay').hidden = opts.length <= 1;
+    const v = value ?? defaultPay(txType);
     $('#txPay').innerHTML = opts.map(([k, l]) => `<option value="${esc(k)}"${k === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   }
   function setType(t, cat, pay) {
@@ -1206,7 +1216,7 @@
     e.preventDefault();
     const amount = toNum($('#txAmount').value);
     if (!(amount > 0)) { toast('金額を入力'); return; }
-    const data = { type: txType, amount, category: txCat, date: $('#txDate').value, memo: $('#txMemo').value.trim(), pay: $('#payWrap').hidden ? '' : $('#txPay').value };
+    const data = { type: txType, amount, category: txCat, date: $('#txDate').value, memo: $('#txMemo').value.trim(), pay: $('#txPay').hidden ? '' : $('#txPay').value };
     state.lastPay = { ...(state.lastPay || {}), [txType]: data.pay };
     if (editingId) {
       const t = state.tx.find(x => x.id === editingId);
@@ -1307,6 +1317,7 @@
     } else editAccount(a);
   });
   $('#regAccount').addEventListener('click', () => editAccount(null));
+  $('#payHint').addEventListener('click', () => editAccount(null));
 
   // ---------- クレジットカード ----------
   function renderCards() {
@@ -1688,7 +1699,7 @@
       { name: 'amount', label: '金額', type: 'number', required: true, min: 1, big: true },
       { name: 'category', label: 'カテゴリ', type: 'select', options: cats, value: cats[0] },
       { name: 'day', label: '毎月の日（1〜31）', type: 'number', required: true, min: 1, max: 31, value: 25 },
-      ...(payOptions(t.type).length > 1 ? [{ name: 'pay', label: t.type === 'income' ? '入金先' : '支払い', type: 'select', options: payOptions(t.type), value: '' }] : []),
+      ...(payOptions(t.type).length > 1 ? [{ name: 'pay', label: t.type === 'income' ? '入金先' : '支払い', type: 'select', options: payOptions(t.type), value: defaultPay(t.type) }] : []),
       { name: 'start', label: '開始', type: 'select', options: [[thisM, `${now.getMonth() + 1}月から`], [monthKey(ny, nm), `${nm + 1}月から`]], value: thisM }
     ], '登録');
     if (!r || !(r.amount > 0)) return;
