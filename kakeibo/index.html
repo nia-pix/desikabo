@@ -134,7 +134,7 @@
   /* ヒーロー（ゼリー） */
   .hero {
     position: relative; overflow: hidden;
-    background: linear-gradient(140deg, rgba(255, 170, 220, .85), rgba(190, 160, 255, .85) 60%, rgba(160, 205, 255, .8));
+    background: var(--hero-bg, linear-gradient(140deg, rgba(255, 170, 220, .85), rgba(190, 160, 255, .85) 60%, rgba(160, 205, 255, .8)));
     color: #fff;
     text-shadow: 0 1px 2px rgba(120, 60, 160, .25);
     border-color: rgba(255,255,255,.7);
@@ -154,7 +154,7 @@
   .hero-top { display: flex; align-items: center; gap: 10px; position: relative; }
   .hero-top .grow { min-width: 0; }
   .mascot { position: relative; flex: none; }
-  .mascot img { display: block; width: 104px; height: 104px; animation: bob 3.2s ease-in-out infinite; filter: drop-shadow(0 8px 10px rgba(120, 60, 180, .3)); cursor: pointer; }
+  .mascot img { display: block; width: 104px; height: 104px; animation: bob 3.2s ease-in-out infinite; filter: var(--pigf) drop-shadow(0 8px 10px rgba(120, 60, 180, .3)); cursor: pointer; }
   .say {
     position: relative; margin-top: 12px; padding: 10px 14px; border-radius: 18px;
     background: rgba(255,255,255,.88); color: #6b4a86; text-shadow: none; font-size: 13px; font-weight: 700;
@@ -245,7 +245,8 @@
   .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .amount { font-variant-numeric: tabular-nums; font-weight: 900; white-space: nowrap; }
   .empty { color: var(--muted); text-align: center; padding: 18px 0; }
-  .empty img { width: 72px; height: 72px; display: block; margin: 0 auto 6px; opacity: .9; }
+  .empty img { width: 72px; height: 72px; display: block; margin: 0 auto 6px; opacity: .9; filter: var(--pigf); }
+  .donut-wrap image { filter: var(--pigf); }
   .donut-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
   .donut-wrap svg { flex: none; overflow: visible; }
   .legend { flex: 1; min-width: 200px; }
@@ -277,7 +278,7 @@
   .bars svg text { fill: var(--muted); font-size: 11px; font-weight: 700; }
   .toast {
     position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px);
-    background: linear-gradient(135deg, rgba(255, 150, 210, .95), rgba(170, 140, 255, .95)); color: #fff;
+    background: linear-gradient(135deg, var(--g1), var(--g2)); color: #fff;
     padding: 10px 18px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.7);
     font-size: 13px; font-weight: 700; opacity: 0; transition: .25s; pointer-events: none; z-index: 20; white-space: nowrap;
     box-shadow: 0 8px 20px rgba(170, 110, 220, .35);
@@ -346,9 +347,9 @@
   #tab-jar.no-goal .jar-stage { width: clamp(130px, min(84vw, 340px, calc(100vh - 360px)), 340px); }
   @supports (height: 100dvh) { #tab-jar.no-goal .jar-stage { width: clamp(130px, min(84vw, 340px, calc(100dvh - 360px)), 340px); } }
   .jar-pig { position: absolute; inset: 0; cursor: pointer; --lv: 110%; transition: --lv 1.4s cubic-bezier(.3, 1.15, .5, 1); animation: float 4s ease-in-out infinite; z-index: 2; }
-  .jar-pig img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 18px 22px rgba(150, 90, 210, .28)); user-select: none; -webkit-user-drag: none; }
+  .jar-pig img { position: absolute; inset: 0; width: 100%; height: 100%; filter: var(--pigf) drop-shadow(0 18px 22px rgba(150, 90, 210, .28)); user-select: none; -webkit-user-drag: none; }
   .jar-pig .fillimg {
-    filter: none;
+    filter: var(--pigf);
     -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--lv) - 5%), #000 calc(var(--lv) + 5%));
     mask-image: linear-gradient(to bottom, transparent calc(var(--lv) - 5%), #000 calc(var(--lv) + 5%));
   }
@@ -387,7 +388,7 @@
   .big-btn {
     position: relative; overflow: hidden; width: 100%; max-width: 420px; margin-top: 14px; padding: 18px; border-radius: 99px;
     font-size: 20px; font-weight: 900; letter-spacing: .08em; color: #fff;
-    background: linear-gradient(180deg, #e85fb4, #b0279a);
+    background: linear-gradient(180deg, var(--btn1, #e85fb4), var(--btn2, #b0279a));
     border: 1.5px solid rgba(255,255,255,.55);
     text-shadow: 0 1px 3px rgba(100, 0, 80, .4);
     box-shadow: 0 12px 26px rgba(200, 50, 160, .38), inset 0 -6px 10px rgba(90, 0, 80, .25), inset 0 2px 0 rgba(255,255,255,.4);
@@ -396,6 +397,7 @@
   .jar-links { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
   .jar-links button { font-size: 13px; color: var(--muted); }
   body.on-jar header { display: none; }
+  body.on-jar #tab-shop { padding-top: max(12px, env(safe-area-inset-top)); }
   body.on-jar #tab-jar { padding-top: max(12px, env(safe-area-inset-top)); }
   .jar-links button[hidden], .rainbow[hidden] { display: none; }
   .rainbow { cursor: pointer; }
@@ -430,6 +432,42 @@
   .cd.sel .dn, .cd.sel .de, .cd.sel .di { color: #fff; }
   .cal-legend { display: flex; gap: 12px; justify-content: center; margin-top: 8px; font-size: 11px; color: var(--muted); }
   .cal-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
+  /* ===== 着せかえ ===== */
+  body { --pigf: hue-rotate(0deg); }
+  :root[data-theme="lav"] { --g1: #c9a8ff; --g2: #8fa0ff; --accent: #7b5ce0; --accent-soft: rgba(170, 150, 255, .25); --btn1: #a07cf0; --btn2: #5b3fc4; --hero-bg: linear-gradient(140deg, rgba(200, 170, 255, .9), rgba(150, 165, 255, .85)); }
+  :root[data-theme="mint"] { --g1: #8fe3c8; --g2: #8fc8ff; --accent: #2a9d82; --accent-soft: rgba(120, 220, 190, .25); --btn1: #4cc9a4; --btn2: #1f8f86; --hero-bg: linear-gradient(140deg, rgba(140, 228, 200, .9), rgba(140, 200, 255, .85)); }
+  :root[data-theme="soda"] { --g1: #8fd8ff; --g2: #9fa8ff; --accent: #2f86d0; --accent-soft: rgba(130, 200, 255, .25); --btn1: #4fb0f2; --btn2: #2a62c6; --hero-bg: linear-gradient(140deg, rgba(140, 215, 255, .9), rgba(160, 170, 255, .85)); }
+  :root[data-theme="peach"] { --g1: #ffb38f; --g2: #ff9fc0; --accent: #e0664f; --accent-soft: rgba(255, 170, 140, .25); --btn1: #ff9b78; --btn2: #e0506e; --hero-bg: linear-gradient(140deg, rgba(255, 190, 150, .92), rgba(255, 160, 190, .88)); }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="lav"] { --bg: #f4f0ff; --bg-a: #ece3ff; --bg-b: #e2e6ff; --bg-c: #f3eaff; }
+    :root[data-theme="mint"] { --bg: #f2fbf8; --bg-a: #dcf7ee; --bg-b: #e2f1ff; --bg-c: #effde6; }
+    :root[data-theme="soda"] { --bg: #f0f7ff; --bg-a: #dff2ff; --bg-b: #e6e8ff; --bg-c: #e3fbff; }
+    :root[data-theme="peach"] { --bg: #fff5f0; --bg-a: #ffe8dc; --bg-b: #ffe3ec; --bg-c: #fff3dc; }
+  }
+  .jar-pig img.acc { inset: auto; left: 15%; top: 3%; width: 24%; height: auto; transform: rotate(-18deg); z-index: 3; filter: drop-shadow(0 3px 4px rgba(120, 60, 160, .3)); }
+  .jar-pig img.acc[hidden] { display: none; }
+  .coins {
+    position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 3px; padding: 4px 10px 4px 5px; border-radius: 99px;
+    background: var(--glass); border: 1.5px solid var(--glass-edge); font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums;
+    color: #c08a12; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: none; z-index: 2;
+  }
+  .coins img { width: 24px; height: 24px; }
+  .shop-head { position: relative; display: flex; align-items: center; justify-content: center; height: 40px; margin-bottom: 10px; }
+  .shop-head h2 { margin: 0; font-size: 18px; font-weight: 900; }
+  .shop-head .back { position: absolute; left: 0; top: 4px; width: 34px; height: 34px; padding: 0; border-radius: 50%; font-size: 18px; }
+  .shop-head .coins { left: auto; right: 0; top: 2px; }
+  .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .shop-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: 20px; background: var(--field); border: 1.5px solid var(--glass-edge); box-shadow: none; font-weight: 700; }
+  .shop-item.on { border-color: var(--accent); background: var(--accent-soft); }
+  .shop-item.locked { opacity: .55; }
+  .shop-item .pv { position: relative; width: 64px; height: 64px; display: grid; place-items: center; }
+  .shop-item .pv img { width: 64px; height: 64px; }
+  .shop-item .pv img.mini { position: absolute; left: 6px; top: 0; width: 22px; height: 22px; transform: rotate(-18deg); }
+  .shop-item .pv .sw { width: 50px; height: 50px; border-radius: 50%; box-shadow: inset 0 -4px 8px rgba(0,0,0,.08), inset 0 4px 6px rgba(255,255,255,.6); }
+  .shop-item .nm { font-size: 12px; }
+  .shop-item .pr { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 2px; font-variant-numeric: tabular-nums; }
+  .shop-item .pr img { width: 14px; height: 14px; }
+  .shop-item.on .pr { color: var(--accent); }
   .install { display: none; }
   .install.show { display: flex; }
   @media (max-width: 400px) {
@@ -488,6 +526,7 @@
   <!-- ちょきん -->
   <section id="tab-jar">
     <div class="jar-screen">
+      <button class="coins" id="coinBtn" aria-label="ショップ"><img src="fx/coin-gold.webp" alt=""><span class="coinN"></span></button>
       <div class="streak" id="streak" hidden title="連続記録"><img src="fx/flame.webp" alt="連続"><span id="streakN"></span></div>
       <div class="jar-goal"><span id="jarName">全財産</span></div>
       <div class="jar-amount" id="jarAmount">¥0</div>
@@ -512,6 +551,7 @@
         <div class="jar-pig" id="jarPig" role="img" aria-label="貯金ぶた">
           <img id="jarBase" src="pig-empty.webp" alt="" draggable="false">
           <img class="fillimg" src="pig.webp" alt="" draggable="false">
+          <img class="acc" id="jarAcc" alt="" draggable="false" hidden>
         </div>
       </div>
       <button class="big-btn" id="jarDeposit">＋ 貯金する</button>
@@ -656,6 +696,20 @@
     </div>
   </section>
 
+  <!-- ショップ -->
+  <section id="tab-shop" hidden>
+    <div class="shop-head">
+      <button class="back" id="shopBack" aria-label="戻る">‹</button>
+      <h2>ショップ</h2>
+      <span class="coins"><img src="fx/coin-gold.webp" alt=""><span class="coinN"></span></span>
+    </div>
+    <div class="card"><h2>ぶたさんの色</h2><div class="shop-grid" data-cat="pig"></div></div>
+    <div class="card"><h2>テーマ</h2><div class="shop-grid" data-cat="theme"></div></div>
+    <div class="card"><h2>かざり</h2><div class="shop-grid" data-cat="acc"></div></div>
+    <div class="card"><h2>背景</h2><div class="shop-grid" data-cat="bg"></div></div>
+    <p class="small" style="text-align:center;line-height:1.8">記録した日 +10・連続3日 +20・7日 +50・14日 +100・30日 +200<br>貯金目標の達成 +100</p>
+  </section>
+
   <!-- 年間 -->
   <section id="tab-year" hidden>
     <div class="card hero">
@@ -767,7 +821,7 @@
 <script>
 (() => {
   const KEY = 'kakeibo-v1';
-  const APP_VERSION = '21';
+  const APP_VERSION = '22';
   const PALETTE = ['#ff8fab','#7fd1b9','#ffc46b','#b9a3f0','#5aa9e6','#ff9e7a','#9bd770','#f4a6d7','#6cc5d9','#d8b48a','#a3a8f0','#c7c7c7'];
   const CAT_ICONS = {
     '食費':'utensils','日用品':'bag','住居':'home','水道光熱':'bolt','通信':'phone','交通':'train','医療':'cross','趣味・娯楽':'music',
@@ -935,11 +989,100 @@
     return say('マイナス…', true);
   }
 
+  // ---------- 着せかえショップ ----------
+  const PIG_FILTER = {
+    pink: 'hue-rotate(0deg)', lav: 'hue-rotate(-25deg)', mint: 'hue-rotate(200deg) saturate(.85)', soda: 'hue-rotate(250deg)',
+    peach: 'hue-rotate(55deg) saturate(1.05)', lemon: 'hue-rotate(95deg) saturate(1.1) brightness(1.05)',
+    gold: 'sepia(.9) saturate(2.4) hue-rotate(-12deg) brightness(1.03)'
+  };
+  const THEME_SW = { pink: ['#ff9fd6', '#b99cff'], lav: ['#c9a8ff', '#8fa0ff'], mint: ['#8fe3c8', '#8fc8ff'], soda: ['#8fd8ff', '#9fa8ff'], peach: ['#ffb38f', '#ff9fc0'] };
+  const ACC_IMG = { star: 'star-yellow', heart: 'heart-pink', sparkle: 'sp-rainbow', coin: 'coin-star' };
+  const BG_SET = { sparkle: 'sparkles', star: 'stars', heart: 'hearts', coin: 'coins' };
+  const SHOP = [
+    { cat: 'pig', v: 'pink', name: 'ピンク', price: 0 }, { cat: 'pig', v: 'lav', name: 'ラベンダー', price: 120 },
+    { cat: 'pig', v: 'mint', name: 'ミント', price: 150 }, { cat: 'pig', v: 'soda', name: 'ソーダ', price: 150 },
+    { cat: 'pig', v: 'peach', name: 'ピーチ', price: 150 }, { cat: 'pig', v: 'lemon', name: 'レモン', price: 180 },
+    { cat: 'pig', v: 'gold', name: 'ゴールド', price: 500 },
+    { cat: 'theme', v: 'pink', name: 'いちご', price: 0 }, { cat: 'theme', v: 'lav', name: 'すみれ', price: 150 },
+    { cat: 'theme', v: 'mint', name: 'ミント', price: 150 }, { cat: 'theme', v: 'soda', name: 'ソーダ', price: 150 },
+    { cat: 'theme', v: 'peach', name: 'ピーチ', price: 150 },
+    { cat: 'acc', v: 'none', name: 'なし', price: 0 }, { cat: 'acc', v: 'star', name: 'ほしピン', price: 80 },
+    { cat: 'acc', v: 'heart', name: 'ハートピン', price: 80 }, { cat: 'acc', v: 'sparkle', name: 'キラキラ', price: 100 },
+    { cat: 'acc', v: 'coin', name: 'コインピン', price: 120 },
+    { cat: 'bg', v: 'sparkle', name: 'キラキラ', price: 0 }, { cat: 'bg', v: 'star', name: 'ほし', price: 60 },
+    { cat: 'bg', v: 'heart', name: 'ハート', price: 60 }, { cat: 'bg', v: 'coin', name: 'コイン', price: 80 },
+    { cat: 'bg', v: 'none', name: 'なし', price: 0 }
+  ].map(x => ({ ...x, id: x.cat + '-' + x.v }));
+  const shop = () => (state.shop = state.shop || { coins: 100, owned: [], equip: { pig: 'pink', theme: 'pink', acc: 'none', bg: 'sparkle' } });
+  const owns = it => it.price === 0 || shop().owned.includes(it.id);
+  function addCoins(n) {
+    shop().coins += n;
+    setTimeout(() => toast(`+${n} コイン`), 1300);
+  }
+  function applyLook() {
+    const eq = shop().equip;
+    if (eq.theme === 'pink') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = eq.theme;
+    document.body.style.setProperty('--pigf', PIG_FILTER[eq.pig] || PIG_FILTER.pink);
+    const acc = $('#jarAcc');
+    acc.hidden = eq.acc === 'none';
+    if (eq.acc !== 'none') acc.src = fxSrc(ACC_IMG[eq.acc]);
+    // 背景
+    const box = $('#sparkles'); box.innerHTML = '';
+    const set = FX[BG_SET[eq.bg]];
+    if (set) for (let i = 0; i < 12; i++) {
+      const el = document.createElement('img');
+      el.src = fxSrc(set[i % set.length]); el.alt = '';
+      el.style.left = Math.random() * 100 + '%'; el.style.top = Math.random() * 100 + '%';
+      el.style.width = 10 + Math.random() * 14 + 'px';
+      el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+      el.style.animationDuration = (4 + Math.random() * 4).toFixed(2) + 's';
+      box.appendChild(el);
+    }
+  }
+  function renderShop() {
+    const sh = shop();
+    document.querySelectorAll('.coinN').forEach(e => e.textContent = sh.coins.toLocaleString('ja-JP'));
+    document.querySelectorAll('.shop-grid').forEach(grid => {
+      const cat = grid.dataset.cat;
+      grid.innerHTML = SHOP.filter(x => x.cat === cat).map(it => {
+        const on = sh.equip[cat] === it.v, have = owns(it);
+        let pv = '';
+        if (cat === 'pig') pv = `<img src="pig.webp" alt="" style="filter:${PIG_FILTER[it.v]}">`;
+        else if (cat === 'theme') pv = `<span class="sw" style="background:linear-gradient(135deg, ${THEME_SW[it.v][0]}, ${THEME_SW[it.v][1]})"></span>`;
+        else if (cat === 'acc') pv = `<img src="pig.webp" alt="" style="filter:var(--pigf)">${it.v !== 'none' ? `<img class="mini" src="${fxSrc(ACC_IMG[it.v])}" alt="">` : ''}`;
+        else pv = it.v === 'none' ? '<span class="small">—</span>' : `<img src="${fxSrc(FX[BG_SET[it.v]][0])}" alt="" style="width:40px;height:40px">`;
+        const pr = on ? '使用中' : have ? '使う' : `<img src="fx/coin-gold.webp" alt="">${it.price}`;
+        return `<button class="shop-item${on ? ' on' : ''}${!have && sh.coins < it.price ? ' locked' : ''}" data-item="${it.id}">
+          <span class="pv">${pv}</span><span class="nm">${it.name}</span><span class="pr">${pr}</span></button>`;
+      }).join('');
+    });
+  }
+  document.querySelector('#tab-shop').addEventListener('click', async e => {
+    const b = e.target.closest('[data-item]'); if (!b) return;
+    const it = SHOP.find(x => x.id === b.dataset.item), sh = shop();
+    if (sh.equip[it.cat] === it.v) return;
+    if (!owns(it)) {
+      if (sh.coins < it.price) { toast(`あと ${it.price - sh.coins} コイン`); return; }
+      if (!(await confirmAsk(`「${it.name}」を ${it.price} コインで買いますか？`, '買う'))) return;
+      sh.coins -= it.price; sh.owned.push(it.id);
+      toast('買いました');
+    }
+    sh.equip[it.cat] = it.v;
+    save(); applyLook(); renderShop(); renderPiggy();
+  });
+  $('#coinBtn').addEventListener('click', () => showTab('shop'));
+  $('#shopBack').addEventListener('click', () => showTab('jar'));
+
   // ---------- 連続記録（炎） ----------
+  const STREAK_BONUS = { 3: 20, 7: 50, 14: 100, 30: 200 };
   function markActive() {
     const d = todayStr();
     state.activeDays = state.activeDays || [];
-    if (!state.activeDays.includes(d)) { state.activeDays.push(d); state.activeDays = state.activeDays.slice(-400); }
+    if (!state.activeDays.includes(d)) {
+      state.activeDays.push(d); state.activeDays = state.activeDays.slice(-400);
+      const bonus = STREAK_BONUS[streak()] || 0;
+      addCoins(10 + bonus);
+    }
   }
   function streak() {
     const set = new Set(state.activeDays || []);
@@ -1067,8 +1210,9 @@
   // ---------- タブ ----------
   function showTab(name) {
     currentTab = name;
-    const navName = name === 'year' ? 'home' : name;
-    document.body.classList.toggle('on-jar', name === 'jar');
+    const navName = name === 'year' ? 'home' : name === 'shop' ? 'jar' : name;
+    document.body.classList.toggle('on-jar', name === 'jar' || name === 'shop');
+    if (name === 'shop') renderShop();
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === navName));
     document.querySelectorAll('main > section').forEach(s => s.hidden = s.id !== 'tab-' + name);
     updateNavLabel();
@@ -1784,7 +1928,10 @@
     syncSaved(g);
     markActive();
     save(); render();
-    if (isDep && before < g.target && g.saved >= g.target) toast(`${g.name} 達成！`);
+    if (isDep && before < g.target && g.saved >= g.target) {
+      toast(`${g.name} 達成！`);
+      if (!g.rewarded) { g.rewarded = true; addCoins(100); save(); }
+    }
   });
 
   // ---------- 年間 ----------
@@ -1981,6 +2128,7 @@
   // ---------- 描画 ----------
   function render() {
     updateNavLabel();
+    renderShop();
     renderHome();
     renderRecord();
     renderAccounts();
@@ -1992,6 +2140,8 @@
     if (!editingId) { $('#txDate').value = defaultDate(); renderPay($('#txPay').value || undefined); }
   }
 
+  shop();
+  applyLook();
   applyRecurring();
   save();
   $('#appVersion').textContent = 'バージョン ' + APP_VERSION;
