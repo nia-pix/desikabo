@@ -582,6 +582,11 @@
 
     <div class="card" id="budgetCard">
       <h2 style="margin:0 0 10px">今月の予算</h2>
+      <div id="allBudget">
+        <div class="row"><span class="small" style="font-weight:700">ぜんぶ</span><span class="small" id="allText"></span></div>
+        <div class="bar pink" id="allBar" style="margin-top:6px;height:18px"><div></div></div>
+        <div class="small" id="allRemain" style="margin:6px 0 14px"></div>
+      </div>
       <div class="row" id="budgetHead"><span class="small" style="font-weight:700">カード以外</span><span class="small" id="budgetText"></span></div>
       <div class="bar" id="budgetBar" style="margin-top:6px"><div></div></div>
       <div class="small" id="budgetRemain" style="margin-top:6px"></div>
@@ -749,6 +754,10 @@
     <div class="card">
       <h2>予算</h2>
       <form id="budgetForm">
+        <label>1か月の予算（ぜんぶ）
+          <input type="number" id="allBudgetInput" min="0" step="1" inputmode="numeric" placeholder="200000">
+        </label>
+        <div class="small" style="margin:4px 0 12px">クレカ・家賃・固定費もすべて含めた、1か月に使っていい金額</div>
         <label>月の予算（カード以外）
           <input type="number" id="budgetInput" min="0" step="1" inputmode="numeric" placeholder="150000">
         </label>
@@ -821,7 +830,7 @@
 <script>
 (() => {
   const KEY = 'kakeibo-v1';
-  const APP_VERSION = '22';
+  const APP_VERSION = '23';
   const PALETTE = ['#ff8fab','#7fd1b9','#ffc46b','#b9a3f0','#5aa9e6','#ff9e7a','#9bd770','#f4a6d7','#6cc5d9','#d8b48a','#a3a8f0','#c7c7c7'];
   const CAT_ICONS = {
     '食費':'utensils','日用品':'bag','住居':'home','水道光熱':'bolt','通信':'phone','交通':'train','医療':'cross','趣味・娯楽':'music',
@@ -1149,11 +1158,25 @@
       .reduce((a, r) => a + r.amount, 0);
     const spent = nonCard(monthTx(t.getFullYear(), t.getMonth()));
     const budgetLeft = state.budget > 0 ? state.budget - spent : null;
+    const all = allBudgetInfo(t.getFullYear(), t.getMonth());
+    const allLeft = all ? all.left : null;
     const hasAcc = state.accounts.length > 0;
     const kept = state.accounts.reduce((a, x) => a + allocOf('c:' + x.id), 0);
     const fromAcc = acc - kept - due - fixedLeft;
-    const value = hasAcc ? (budgetLeft !== null ? Math.min(fromAcc, budgetLeft) : fromAcc) : budgetLeft;
-    return { value, acc, kept, due, fixedLeft, budgetLeft, hasAcc };
+    // 口座から出せる額・カード以外の予算のこり・ぜんぶ予算のこり のうちいちばん小さいもの
+    const cands = [hasAcc ? fromAcc : null, budgetLeft, allLeft].filter(v => v !== null);
+    const value = cands.length ? Math.min(...cands) : null;
+    return { value, acc, kept, due, fixedLeft, budgetLeft, allLeft, hasAcc };
+  }
+  // 1か月の予算（ぜんぶ）：その月の支出すべて＋まだ記録されていない今月の固定費
+  function allBudgetInfo(y, m) {
+    if (!(state.allBudget > 0)) return null;
+    const key = monthKey(y, m), now0 = new Date(), curKey = monthKey(now0.getFullYear(), now0.getMonth());
+    const spent = monthTx(y, m).filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
+    const upcoming = key === curKey ? state.recurring
+      .filter(r => r.type === 'expense' && (r.last || '') < curKey && r.start <= curKey)
+      .reduce((a, r) => a + r.amount, 0) : 0;
+    return { budget: state.allBudget, spent, upcoming, left: state.allBudget - spent - upcoming };
   }
 
   // ---------- 固定費の自動記録 ----------
@@ -1266,7 +1289,8 @@
     if (sp.hasAcc && sp.kept) det.push(`取り置き <b>-${yen(sp.kept)}</b>`);
     if (sp.hasAcc && sp.due) det.push(`カード <b>-${yen(sp.due)}</b>`);
     if (sp.hasAcc && sp.fixedLeft) det.push(`固定費 <b>-${yen(sp.fixedLeft)}</b>`);
-    if (sp.budgetLeft !== null) det.push(`予算のこり <b>${yen(sp.budgetLeft)}</b>`);
+    if (sp.allLeft !== null) det.push(`予算のこり <b>${yen(sp.allLeft)}</b>`);
+    if (sp.budgetLeft !== null) det.push(`カード以外のこり <b>${yen(sp.budgetLeft)}</b>`);
     $('#canUseDetail').innerHTML = det.map(x => `<span style="white-space:nowrap">${x}</span>`).join('');
     $('#regAccount').hidden = sp.hasAcc;
     const msg = homeMessage(s, list);
@@ -1279,8 +1303,18 @@
     const card = $('#budgetCard');
     const catB = Object.entries(state.catBudgets).filter(([c, v]) => v > 0);
     const hasCards = state.cards.length > 0;
-    if (state.budget > 0 || catB.length || hasCards) {
+    const all = allBudgetInfo(viewY, viewM);
+    if (all || state.budget > 0 || catB.length || hasCards) {
       card.hidden = false;
+      $('#allBudget').hidden = !all;
+      if (all) {
+        const used = all.spent + all.upcoming;
+        $('#allText').textContent = `${yen(all.spent)} / ${yen(all.budget)}`;
+        $('#allBar').classList.toggle('over', used > all.budget);
+        $('#allBar > div').style.width = Math.min(100, all.spent / all.budget * 100) + '%';
+        $('#allRemain').textContent = (all.left >= 0 ? `のこり ${yen(all.left)}` : `${yen(-all.left)} オーバー`)
+          + (all.upcoming ? `（これからの固定費 ${yen(all.upcoming)} 込み）` : '');
+      }
       const hasTotal = state.budget > 0;
       $('#budgetBar').hidden = $('#budgetRemain').hidden = $('#budgetHead').hidden = !hasTotal;
       if (hasTotal) {
@@ -2001,6 +2035,7 @@
 
   $('#budgetForm').addEventListener('submit', e => {
     e.preventDefault();
+    state.allBudget = Math.max(0, toNum($('#allBudgetInput').value) || 0);
     state.budget = Math.max(0, toNum($('#budgetInput').value) || 0);
     state.catBudgets = {};
     document.querySelectorAll('#catBudgetInputs input').forEach(inp => {
@@ -2012,6 +2047,7 @@
     save(); render(); toast('保存しました');
   });
   function renderSettings() {
+    $('#allBudgetInput').value = state.allBudget || '';
     $('#budgetInput').value = state.budget || '';
     $('#catBudgetInputs').innerHTML = state.categories.expense.map(c => `
       <label>${esc(c)}<input type="number" min="0" step="1" inputmode="numeric" data-cat="${esc(c)}" value="${state.catBudgets[c] || ''}" placeholder="—"></label>`).join('');
